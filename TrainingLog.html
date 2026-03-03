@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Thorne | Mobile K9 Log</title>
+    <style>
+        :root {
+            --primary-gold: #C5A059;
+            --dark-slate: #1A252F;
+            --bg-gray: #F4F7F6;
+            --white: #ffffff;
+            --danger: #E74C3C;
+            --accent: #3498DB;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-gray);
+            color: var(--dark-slate);
+            margin: 0; padding: 10px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: var(--white);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary-gold); padding-bottom: 10px; }
+        h1 { margin: 5px 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
+
+        .form-section { background: #fff; margin-bottom: 20px; }
+
+        label { display: block; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px; color: #555; text-transform: uppercase; }
+        input, select, textarea {
+            width: 100%; padding: 12px; border: 1px solid #DDD; border-radius: 8px; margin-bottom: 15px; font-size: 16px; /* Prevents iOS zoom */
+        }
+
+        /* Exercise Grid for Mobile */
+        .exercise-flex {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+            max-height: 250px; overflow-y: auto; padding: 5px; margin-bottom: 20px;
+        }
+        
+        .ex-chip {
+            background: #eee; padding: 10px; border-radius: 8px; font-size: 0.8rem; text-align: center;
+            border: 1px solid #ccc; cursor: pointer; transition: 0.2s;
+        }
+        .ex-chip input { display: none; }
+        .ex-chip.active { background: var(--dark-slate); color: white; border-color: var(--dark-slate); }
+
+        /* Detail Blocks */
+        .ex-detail-row {
+            background: #f9f9f9; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px;
+        }
+
+        /* Mobile Voice Recorder */
+        .recorder-interface {
+            background: #E8F0FE; padding: 12px; border-radius: 8px; margin-top: 10px;
+        }
+        .btn-rec {
+            width: 100%; background: var(--danger); color: white; border: none; padding: 12px;
+            border-radius: 8px; font-weight: bold; font-size: 0.9rem; margin-bottom: 10px;
+        }
+        .btn-rec.recording { animation: pulse 1s infinite; background: #c0392b; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .audio-preview-list { display: flex; flex-direction: column; gap: 8px; }
+        .audio-item { display: flex; align-items: center; justify-content: space-between; background: white; padding: 5px; border-radius: 5px; border: 1px solid #ddd; }
+        audio { height: 35px; width: 80%; }
+
+        .btn-save {
+            width: 100%; background: var(--dark-slate); color: white; padding: 18px;
+            border: none; border-radius: 10px; font-weight: bold; font-size: 1.1rem; margin-top: 20px;
+        }
+
+        /* History Cards */
+        .history-card { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-top: 20px; }
+        .ex-table-mini { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+        .ex-table-mini td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Thorne Mobile</h1>
+        <div style="font-size: 0.7rem; color: #666;">FIELD PERFORMANCE LOG</div>
+    </header>
+
+    <div class="form-section">
+        <label>Session Date</label>
+        <input type="date" id="date">
+
+        <label>Environment</label>
+        <select id="environment">
+            <option>Home/Garden</option>
+            <option>Public Park</option>
+            <option>Street/Busy</option>
+            <option>Training Club</option>
+        </select>
+
+        <label>Exercise Selection</label>
+        <div class="exercise-flex" id="exerciseContainer"></div>
+
+        <div id="exerciseDetails"></div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <label>General Session Notes</label>
+        <textarea id="generalNotes" rows="4" placeholder="General summary of the session..."></textarea>
+        
+        <div class="recorder-interface">
+            <label>General Voice Notes</label>
+            <button class="btn-rec" id="btn-rec-general" onclick="toggleRec('general')">🎤 Start General Recording</button>
+            <div id="audio-list-general" class="audio-preview-list"></div>
+        </div>
+
+        <button class="btn-save" onclick="saveLog()">💾 Save Training Log</button>
+    </div>
+
+    <div id="history"></div>
+    
+    <div style="margin-top: 30px; text-align: center;">
+        <button onclick="exportData()" style="font-size: 0.7rem; padding: 10px; background: none; border: 1px solid #ccc; border-radius: 5px;">Export Data Backup</button>
+    </div>
+</div>
+
+<script>
+    const exerciseLibrary = [
+        "About Turn-By", "About Turn-Wrap", "Bark", "Basic Position", "Bite", 
+        "Bring It", "Calm/ Settle", "Down Front", "Down Left", "Down Middle", 
+        "Down Right", "Free/ Play", "Front Sit", "Heel", "Jump Off", "Jump Onto", 
+        "Leave It", "Leave Object", "Left Spin", "Left Turn", "Look and Bark", 
+        "Look/ Focus", "No", "Place/ Bed", "Quiet", "Recall", "Retrieve", 
+        "Reverse Heel", "Right Spin", "Right Turn", "Send Away", "Sit in Middle", 
+        "Sit Left", "Sit Right", "Stand Front", "Stand Left", "Stand Middle", 
+        "Stand Right", "Stay", "Take It", "Touch", "Wait"
+    ];
+
+    let entries = JSON.parse(localStorage.getItem('thorneMobileLogs')) || [];
+    let recordedMemos = { general: [] }; // Keyed by exercise name or 'general'
+    let recorders = {};
+
+    function init() {
+        const container = document.getElementById('exerciseContainer');
+        container.innerHTML = exerciseLibrary.map(ex => `
+            <label class="ex-chip" id="chip-${ex.replace(/\s+/g, '-')}">
+                <input type="checkbox" value="${ex}" onchange="handleExToggle(this)"> ${ex}
+            </label>
+        `).join('');
+        renderHistory();
+        document.getElementById('date').valueAsDate = new Date();
+    }
+
+    function handleExToggle(cb) {
+        const name = cb.value;
+        const id = name.replace(/\s+/g, '-');
+        const chip = document.getElementById(`chip-${id}`);
+        const detailDiv = document.getElementById('exerciseDetails');
+
+        if (cb.checked) {
+            chip.classList.add('active');
+            recordedMemos[name] = [];
+            const row = document.createElement('div');
+            row.className = 'ex-detail-row';
+            row.id = `detail-${id}`;
+            row.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <strong style="font-size:0.9rem">${name}</strong>
+                    <input type="number" class="score-in" placeholder="Score 0-10" style="width:80px; margin:0;">
+                </div>
+                <textarea class="obs-in" rows="2" placeholder="Notes for ${name}..."></textarea>
+                <div class="recorder-interface">
+                    <button class="btn-rec" id="btn-rec-${id}" onclick="toggleRec('${name}')">🎤 Rec Memo</button>
+                    <div id="audio-list-${id}" class="audio-preview-list"></div>
+                </div>
+            `;
+            detailDiv.appendChild(row);
+        } else {
+            chip.classList.remove('active');
+            document.getElementById(`detail-${id}`).remove();
+            delete recordedMemos[name];
+        }
+    }
+
+    async function toggleRec(key) {
+        const id = key.replace(/\s+/g, '-');
+        const btn = document.getElementById(`btn-rec-${id}`);
+
+        if (!recorders[key] || recorders[key].state === "inactive") {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                recorders[key] = new MediaRecorder(stream);
+                let chunks = [];
+                recorders[key].ondataavailable = e => chunks.push(e.data);
+                recorders[key].onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/mp4' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = () => {
+                        recordedMemos[key].push(reader.result);
+                        updateAudioUI(key);
+                    };
+                };
+                recorders[key].start();
+                btn.innerText = "🛑 STOPPING...";
+                btn.classList.add('recording');
+            } catch (err) {
+                alert("Microphone access denied or not supported.");
+            }
+        } else {
+            recorders[key].stop();
+            btn.innerText = (key === 'general') ? "🎤 Start General Recording" : "🎤 Rec Memo";
+            btn.classList.remove('recording');
+        }
+    }
+
+    function updateAudioUI(key) {
+        const id = key.replace(/\s+/g, '-');
+        const list = document.getElementById(`audio-list-${id}`);
+        list.innerHTML = recordedMemos[key].map((src, i) => `
+            <div class="audio-item">
+                <audio controls src="${src}"></audio>
+                <button onclick="removeAudio('${key}', ${i})" style="border:none; background:none; color:red; font-weight:bold;">✕</button>
+            </div>
+        `).join('');
+    }
+
+    function removeAudio(key, i) {
+        recordedMemos[key].splice(i, 1);
+        updateAudioUI(key);
+    }
+
+    function saveLog() {
+        const date = document.getElementById('date').value;
+        if (!date) return alert("Select a date.");
+
+        const exerciseData = Array.from(document.querySelectorAll('.ex-detail-row')).map(row => {
+            const name = row.querySelector('strong').innerText;
+            return {
+                name: name,
+                score: row.querySelector('.score-in').value || 0,
+                obs: row.querySelector('.obs-in').value || "",
+                audio: recordedMemos[name] || []
+            };
+        });
+
+        const entry = {
+            date,
+            env: document.getElementById('environment').value,
+            generalNotes: document.getElementById('generalNotes').value,
+            generalAudio: recordedMemos['general'],
+            exercises: exerciseData
+        };
+
+        entries.push(entry);
+        localStorage.setItem('thorneMobileLogs', JSON.stringify(entries));
+        alert("Log Saved Successfully!");
+        location.reload();
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history');
+        container.innerHTML = "<h3>Previous Sessions</h3>";
+        entries.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach((e, idx) => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:5px;">
+                    <strong>${e.date}</strong>
+                    <span style="font-size:0.8rem; color:#666;">${e.env}</span>
+                </div>
+                <div style="font-size:0.85rem; margin:10px 0;">
+                    <strong>General Notes:</strong> ${e.generalNotes}
+                    <div style="margin-top:5px;">${e.generalAudio.map(src => `<audio controls src="${src}" style="width:100%"></audio>`).join('')}</div>
+                </div>
+                <table class="ex-table-mini">
+                    ${e.exercises.map(ex => `
+                        <tr>
+                            <td><strong>${ex.name}</strong><br><small>${ex.obs}</small></td>
+                            <td style="text-align:right"><strong>${ex.score}/10</strong><br>
+                            ${ex.audio.map(src => `<audio controls src="${src}" style="width:100px; height:25px;"></audio>`).join('')}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+                <button onclick="deleteEntry(${idx})" style="width:100%; margin-top:10px; background:none; border:none; color:red; font-size:0.7rem;">Delete Log</button>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function deleteEntry(i) { if(confirm("Delete this log?")) { entries.splice(i,1); localStorage.setItem('thorneMobileLogs', JSON.stringify(entries)); renderHistory(); } }
+    
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entries));
+        const a = document.createElement('a'); a.href = dataStr; a.download = `thorne_backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
+    }
+
+    init();
+</script>
+</body>
+</html>
