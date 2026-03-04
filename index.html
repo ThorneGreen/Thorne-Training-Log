@@ -3,234 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THORNE Training Log</title>
+    <title>THORNE Training App</title>
     <style>
         :root {
-            --primary-gold: #C5A059;
-            --dark-slate: #1A252F;
-            --bg-gray: #F4F7F6;
-            --white: #ffffff;
-            --danger: #E74C3C;
-            --accent: #3498DB;
+            --brand-navy: #0D1B2A;    
+            --brand-gold: #D4AF37;    
+            --brand-accent: #E0E1DD;  
+            --brand-red: #8B0000;     
+            --white: #FFFFFF;
+            --bg-body: #F0F2F5;
         }
 
-        * { box-sizing: border-box; }
-
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-gray); color: var(--dark-slate);
-            margin: 0; padding: 10px; -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--brand-navy);
+            margin: 0; padding: 0;
         }
 
-        .container {
-            max-width: 600px; margin: auto; background: var(--white);
-            padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        /* HEADER BANNER */
+        .app-header {
+            background-color: var(--brand-navy);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-bottom: 4px solid var(--brand-gold);
         }
-
-        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary-gold); padding-bottom: 10px; }
-        h1 { margin: 5px 0; font-size: 1.4rem; text-transform: uppercase; letter-spacing: 2px; }
-
-        label { display: block; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px; color: #555; text-transform: uppercase; }
         
-        input[type="date"], select, textarea, input[type="text"], input[type="number"] {
-            width: 100%; padding: 12px; border: 1px solid #DDD; border-radius: 8px; margin-bottom: 15px; font-size: 16px;
+        .app-logo {
+            max-width: 150px;
+            height: auto;
+            /* Added a fallback background in case image fails */
+            min-height: 50px; 
+            display: block;
         }
 
-        details { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; background: #fdfdfd; }
-        summary { padding: 12px; font-weight: bold; cursor: pointer; background: #eee; border-radius: 8px; outline: none; }
+        /* NAVIGATION */
+        nav {
+            display: flex;
+            background-color: var(--brand-navy);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            color: var(--brand-accent);
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            border-bottom: 3px solid transparent;
+        }
+        nav button.active {
+            border-bottom: 3px solid var(--brand-gold);
+            color: var(--brand-gold);
+            background-color: rgba(255,255,255,0.05);
+        }
 
-        .exercise-flex { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; padding: 10px; }
-        .ex-chip { background: #eee; padding: 10px; border-radius: 8px; font-size: 0.75rem; text-align: center; border: 1px solid #ccc; }
-        .ex-chip input { display: none; }
-        .ex-chip.active { background: var(--dark-slate); color: white; border-color: var(--dark-slate); }
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        .page { display: none; }
+        .page.active { display: block; }
 
-        .ex-detail-row { background: #f9f9f9; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .card {
+            background-color: var(--white);
+            border-left: 5px solid var(--brand-gold);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
 
-        /* Recorder Styles */
-        .recorder-box { background: #E8F0FE; padding: 10px; border-radius: 8px; margin-top: 10px; }
+        h1 { text-align: center; color: var(--brand-navy); font-size: 1.4rem; text-transform: uppercase; margin: 10px 0;}
+        h3 { margin: 0 0 10px 0; color: var(--brand-navy); font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        label { display: block; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px; color: #444; text-transform: uppercase; }
+        
+        input, select, textarea {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 12px; font-size: 16px;
+        }
+
+        .instruction-text {
+            font-size: 0.85rem; color: #555; line-height: 1.4; margin-bottom: 15px;
+            background: #f9f9f9; padding: 10px; border-radius: 4px;
+        }
+
+        .exercise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .chip {
+            background-color: var(--white); border: 2px solid var(--brand-navy);
+            padding: 10px; border-radius: 5px; font-size: 0.8rem; text-align: center; font-weight: bold; cursor: pointer;
+        }
+        .chip input { display: none; }
+        .chip.active { background-color: var(--brand-navy); color: var(--brand-gold); }
+
         .btn-rec {
-            width: 100%; background: var(--danger); color: white; border: none; padding: 10px;
-            border-radius: 8px; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px;
+            width: 100%; background-color: var(--brand-red); color: white;
+            border: none; padding: 12px; border-radius: 5px; font-weight: bold; margin-bottom: 10px;
         }
-        .btn-rec.recording { animation: pulse 1s infinite; background: #c0392b; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .btn-rec.recording { animation: pulse 1s infinite; background-color: red; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         
-        .audio-item { display: flex; align-items: center; gap: 5px; margin-top: 5px; background: white; padding: 5px; border-radius: 5px; border: 1px solid #ddd; }
-        audio { height: 30px; flex-grow: 1; }
+        .btn-main {
+            width: 100%; background-color: var(--brand-navy); color: var(--brand-gold);
+            padding: 18px; border: none; border-radius: 5px; font-weight: bold; font-size: 1rem; text-transform: uppercase; margin-bottom: 15px;
+        }
 
-        .btn-save { width: 100%; background: var(--dark-slate); color: white; padding: 18px; border: none; border-radius: 10px; font-weight: bold; font-size: 1.1rem; }
-        .btn-report { width: 100%; background: var(--primary-gold); color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; }
-
-        #reportView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding: 20px; }
+        #reportView {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-body); z-index: 1000; overflow-y: auto; padding: 20px;
+        }
     </style>
 </head>
 <body>
 
+<div class="app-header">
+    <img src="logo.png" alt="THORNE LOGO" class="app-logo">
+</div>
+
+<nav>
+    <button id="nav-log" class="active" onclick="showPage('log')">Session Log</button>
+    <button id="nav-plan" onclick="showPage('plan')">Weekly Planner</button>
+</nav>
+
 <div class="container">
-    <header>
-        <h1>THORNE Training Log</h1>
-        <div style="font-size: 0.7rem; color: #666;">FIELD PERFORMANCE & VOICE MEMOS</div>
-    </header>
-
-    <label>Session Date</label>
-    <input type="date" id="date">
-
-    <label>Environment</label>
-    <select id="environment">
-        <option>Home/Garden</option>
-        <option>Public Park</option>
-        <option>Training Club</option>
-        <option>Street/Busy</option>
-    </select>
-
-    <details>
-        <summary>Select Exercises</summary>
-        <div class="exercise-flex" id="exerciseContainer"></div>
-        <div style="padding:10px; border-top:1px solid #eee; display:flex; gap:5px;">
-            <input type="text" id="newExName" placeholder="Add custom..." style="margin:0; padding:8px;">
-            <button onclick="addNewExercise()" style="background:var(--accent); color:white; border:none; padding:8px; border-radius:5px;">Add</button>
+    
+    <div id="page-log" class="page active">
+        <h1>Record Performance</h1>
+        <div class="card">
+            <label>Date</label>
+            <input type="date" id="log-date">
+            <label>Environment</label>
+            <select id="log-env">
+                <option>Home/Garden</option>
+                <option>Public Park</option>
+                <option>Training Club</option>
+                <option>Street/Busy</option>
+            </select>
         </div>
-    </details>
+        
+        <details class="card" style="padding:0;">
+            <summary style="padding:15px; font-weight:bold; cursor:pointer;">+ Select Exercises</summary>
+            <div class="exercise-grid" id="log-chips"></div>
+        </details>
 
-    <div id="exerciseDetails"></div>
+        <div id="log-details"></div>
 
-    <label>General Notes & Audio</label>
-    <textarea id="generalNotes" rows="2" placeholder="Summary..."></textarea>
-    <div class="recorder-box">
-        <button class="btn-rec" id="btn-rec-general" onclick="toggleRec('general')">🎤 Record General Memo</button>
-        <div id="audio-list-general"></div>
+        <div class="card">
+            <label>General Summary</label>
+            <textarea id="log-notes" rows="3" placeholder="Notes..."></textarea>
+            <button class="btn-rec" id="btn-rec-general" onclick="handleVoice('general')">🎤 Record General Memo</button>
+            <div id="audio-general"></div>
+        </div>
+
+        <button class="btn-main" onclick="saveLog()">Save Session</button>
+        <button class="btn-main" style="background:#777;" onclick="viewHistory()">View History</button>
     </div>
 
-    <button class="btn-save" style="margin-top:20px;" onclick="saveLog()">💾 Save Training Log</button>
-    <button class="btn-report" onclick="generateReport()">📋 Full History Report</button>
+    <div id="page-plan" class="page">
+        <h1>Weekly Objectives</h1>
+        <button class="btn-main" style="background-color: var(--brand-gold); color: var(--brand-navy);" onclick="loadThorneTemplate()">Load Thorne Standard Plan</button>
+        <div id="plan-container"></div>
+        <button class="btn-main" onclick="savePlan()">Save Weekly Plan</button>
+    </div>
 </div>
 
 <div id="reportView">
-    <button onclick="closeReport()" style="float:right; padding:10px; background:var(--danger); color:white; border:none; border-radius:5px;">Close</button>
-    <h2>Training History</h2>
+    <button onclick="document.getElementById('reportView').style.display='none'" class="btn-rec">Close History</button>
     <div id="reportContent"></div>
 </div>
 
 <script>
-    const exerciseLibrary = ["Heel", "About Turn", "Recall", "Retrieve", "Send Away", "Down Front", "Stay"];
-    let entries = JSON.parse(localStorage.getItem('thorneLogs')) || [];
-    let currentMemos = { general: [] };
-    let activeRecorders = {};
+    const exerciseLibrary = ["Rear-End Aware", "Sit", "Stand", "Down", "Heeling", "Engagement", "About Turn", "Stay", "Calmness", "Ball Work"];
+    const thorneTemplate = [
+        { title: "1. Rear-End Awareness", desc: "Pivot Block Work. Stand in front and Heel position pivot." },
+        { title: "2. Position Changes", desc: "Tucked movements: Butt back for Down, forward for Sit." },
+        { title: "3. Engagement & Motivation", desc: "Push for intensity. 'Jump out of the box' maneuvers." },
+        { title: "4. Heeling & Footwork", desc: "Fancy feet. Shuffles, 10 steps. Leash pops for focus." },
+        { title: "5. The About-Turn", desc: "Right leg forward, pull Thorne right, body left." },
+        { title: "6. Stay Command", desc: "Release with right foot. Build duration, varied orientation." },
+        { title: "7. Calmness & Regulation", desc: "The 'Chill' after work. Correct vocalizing." },
+        { title: "8. Ball Work", desc: "Two balls. Focus on 'Leave' to get the focus reward." }
+    ];
 
-    function init() {
-        const cont = document.getElementById('exerciseContainer');
-        cont.innerHTML = exerciseLibrary.sort().map(ex => `
-            <label class="ex-chip" id="chip-${ex.replace(/\s+/g, '-')}">
-                <input type="checkbox" value="${ex}" onchange="handleExToggle(this)"> ${ex}
-            </label>
-        `).join('');
-        document.getElementById('date').valueAsDate = new Date();
+    let entries = JSON.parse(localStorage.getItem('thorneLogs')) || [];
+    let weeklyPlan = JSON.parse(localStorage.getItem('thornePlan')) || [];
+    let activeRecorders = {};
+    let tempMemos = {};
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(`page-${pageId}`).classList.add('active');
+        document.getElementById(`nav-${pageId}`).classList.add('active');
     }
 
-    function handleExToggle(cb) {
+    function initLog() {
+        const chipCont = document.getElementById('log-chips');
+        chipCont.innerHTML = exerciseLibrary.sort().map(ex => `
+            <label class="chip" id="chip-${ex.replace(/\s/g,'-')}">
+                <input type="checkbox" value="${ex}" onchange="toggleLogEx(this)"> ${ex}
+            </label>
+        `).join('');
+        document.getElementById('log-date').valueAsDate = new Date();
+    }
+
+    function toggleLogEx(cb) {
         const name = cb.value;
-        const id = name.replace(/\s+/g, '-');
+        const id = name.replace(/\s+/g,'-');
         const chip = document.getElementById(`chip-${id}`);
-        if (cb.checked) {
+        if(cb.checked) {
             chip.classList.add('active');
-            currentMemos[name] = [];
             const row = document.createElement('div');
-            row.className = 'ex-detail-row';
-            row.id = `detail-${id}`;
-            row.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong>${name}</strong>
-                    <input type="number" class="score-in" placeholder="0-10" style="width:60px; margin:0;">
-                </div>
-                <textarea class="obs-in" rows="1" style="margin-top:10px" placeholder="Quick notes..."></textarea>
-                <button class="btn-rec" id="btn-rec-${id}" onclick="toggleRec('${name}')">🎤 Rec Memo</button>
-                <div id="audio-list-${id}"></div>
-            `;
-            document.getElementById('exerciseDetails').appendChild(row);
+            row.className = 'card'; row.id = `detail-${id}`;
+            row.innerHTML = `<h3>${name}</h3><input type="number" class="sc" placeholder="Score 0-10"><textarea class="obs" rows="1" placeholder="Notes..."></textarea><button class="btn-rec" id="rec-${id}" onclick="handleVoice('${id}')">🎤 Voice Note</button><div id="audio-${id}"></div>`;
+            document.getElementById('log-details').appendChild(row);
         } else {
             chip.classList.remove('active');
-            document.getElementById(`detail-${id}`).remove();
-            delete currentMemos[name];
+            const el = document.getElementById(`detail-${id}`); if(el) el.remove();
         }
     }
 
-    async function toggleRec(key) {
-        const id = key.replace(/\s+/g, '-');
-        const btn = document.getElementById(`btn-rec-${id}`);
-        if (!activeRecorders[key]) {
+    function loadThorneTemplate() {
+        weeklyPlan = thorneTemplate.map(t => ({ ...t, userNotes: '', rating: 0, audio: null }));
+        renderPlan();
+    }
+
+    function renderPlan() {
+        const cont = document.getElementById('plan-container');
+        cont.innerHTML = '';
+        weeklyPlan.forEach((obj, idx) => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `<h3>${obj.title}</h3><div class="instruction-text">${obj.desc}</div><textarea onchange="updatePlanData(${idx}, 'userNotes', this.value)" placeholder="Focus...">${obj.userNotes || ''}</textarea><input type="range" min="0" max="10" value="${obj.rating || 0}" onchange="updatePlanData(${idx}, 'rating', this.value); renderPlan();"><button class="btn-rec" style="background:var(--brand-navy); color:var(--brand-gold);" id="rec-plan-${idx}" onclick="handleVoice('plan-${idx}')">🎤 Plan Voice Note</button><div id="audio-plan-${idx}">${obj.audio ? `<audio controls src="${obj.audio}"></audio>` : ''}</div>`;
+            cont.appendChild(div);
+        });
+    }
+
+    function updatePlanData(idx, key, val) { weeklyPlan[idx][key] = val; }
+    function savePlan() { localStorage.setItem('thornePlan', JSON.stringify(weeklyPlan)); alert("Plan saved!"); }
+
+    async function handleVoice(id) {
+        const btn = document.getElementById(`rec-${id}`) || document.getElementById(`btn-rec-${id}`);
+        if (!activeRecorders[id]) {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-            const recorder = new MediaRecorder(stream, { mimeType });
+            const recorder = new MediaRecorder(stream);
             let chunks = [];
             recorder.ondataavailable = e => chunks.push(e.data);
             recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: mimeType });
+                const blob = new Blob(chunks, { type: 'audio/mp4' });
                 const reader = new FileReader();
                 reader.readAsDataURL(blob);
                 reader.onloadend = () => {
-                    currentMemos[key].push(reader.result);
-                    updateAudioUI(key);
+                    const base64 = reader.result;
+                    if(id.startsWith('plan-')) { weeklyPlan[id.split('-')[2]].audio = base64; } 
+                    else { tempMemos[id] = base64; }
+                    document.getElementById(`audio-${id}`).innerHTML = `<audio controls src="${base64}"></audio>`;
                 };
                 stream.getTracks().forEach(t => t.stop());
             };
             recorder.start();
-            activeRecorders[key] = recorder;
+            activeRecorders[id] = recorder;
             btn.classList.add('recording'); btn.innerText = "🛑 STOP";
         } else {
-            activeRecorders[key].stop();
-            delete activeRecorders[key];
-            btn.classList.remove('recording'); btn.innerText = "🎤 Record Memo";
+            activeRecorders[id].stop(); delete activeRecorders[id];
+            btn.classList.remove('recording'); btn.innerText = "🎤 RECORDED";
         }
     }
 
-    function updateAudioUI(key) {
-        const id = key.replace(/\s+/g, '-');
-        document.getElementById(`audio-list-${id}`).innerHTML = currentMemos[key].map((src, i) => `
-            <div class="audio-item"><audio controls src="${src}"></audio></div>
-        `).join('');
-    }
-
     function saveLog() {
-        const exerciseData = Array.from(document.querySelectorAll('.ex-detail-row')).map(row => {
-            const name = row.querySelector('strong').innerText;
-            return {
-                name, score: row.querySelector('.score-in').value || 0,
-                obs: row.querySelector('.obs-in').value,
-                audio: currentMemos[name]
-            };
-        });
-        const entry = {
-            date: document.getElementById('date').value,
-            env: document.getElementById('environment').value,
-            notes: document.getElementById('generalNotes').value,
-            genAudio: currentMemos['general'],
-            exercises: exerciseData
+        const session = {
+            date: document.getElementById('log-date').value,
+            env: document.getElementById('log-env').value,
+            notes: document.getElementById('log-notes').value,
+            audio: tempMemos['general'],
+            exercises: Array.from(document.querySelectorAll('#log-details .card')).map(card => {
+                const name = card.querySelector('h3').innerText;
+                const id = name.replace(/\s+/g,'-');
+                return { name, score: card.querySelector('.sc').value || 0, obs: card.querySelector('.obs').value, audio: tempMemos[id] };
+            })
         };
-        entries.push(entry);
+        entries.push(session);
         localStorage.setItem('thorneLogs', JSON.stringify(entries));
-        alert("Session Saved!"); location.reload();
+        alert("Session Logged!"); location.reload();
     }
 
-    function generateReport() {
+    function viewHistory() {
         const report = document.getElementById('reportContent');
-        report.innerHTML = entries.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(e => `
-            <div style="border-bottom:2px solid #ddd; padding:10px; margin-bottom:15px;">
-                <h4>${e.date} - ${e.env}</h4>
-                <p>${e.notes}</p>
-                ${e.genAudio.map(s => `<audio controls src="${s}" style="width:100%"></audio>`).join('')}
-                <ul>${e.exercises.map(ex => `<li><strong>${ex.name}:</strong> ${ex.score}/10 - ${ex.obs}</li>`).join('')}</ul>
-            </div>
-        `).join('');
+        report.innerHTML = entries.reverse().map(e => `<div class="card"><strong>${e.date}</strong><p>${e.notes}</p></div>`).join('');
         document.getElementById('reportView').style.display = 'block';
     }
 
-    function closeReport() { document.getElementById('reportView').style.display = 'none'; }
-    function addNewExercise() {
-        const val = document.getElementById('newExName').value;
-        if(val) { exerciseLibrary.push(val); init(); document.getElementById('newExName').value=''; }
-    }
-
-    init();
+    initLog();
+    renderPlan();
 </script>
 </body>
 </html>
