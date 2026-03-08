@@ -6,12 +6,13 @@
     <title>THORNE Training App</title>
     <style>
         :root {
-            --brand-navy: #0D1B2A;    
-            --brand-gold: #D4AF37;    
-            --brand-accent: #E0E1DD;  
-            --brand-red: #8B0000;     
-            --white: #FFFFFF;
-            --bg-body: #F0F2F5;
+           --brand-navy: #0B132B;    /* Deeper, more premium navy */
+           --brand-gold: #C5A028;    /* Slightly more "metallic" gold */
+           --brand-accent: #5BC0BE;  /* Teal accent for success/active states */
+           --brand-red: #A31621;     /* Subdued crimson for recording */
+           --white: #FFFFFF;
+           --bg-body: #E9ECEF;
+           --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -23,24 +24,26 @@
             margin: 0; padding: 0;
         }
 
-        /* HEADER BANNER */
-        .app-header {
-            background-color: var(--brand-navy);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-bottom: 4px solid var(--brand-gold);
-        }
-        
-        .app-logo {
-            max-width: 150px;
-            height: auto;
-            /* Added a fallback background in case image fails */
-            min-height: 50px; 
-            display: block;
-        }
+       /* Syncing buttons and headers */
+.btn-main {
+  background-color: var(--brand-navy);
+  color: var(--brand-gold);
+  border: 1px solid var(--brand-gold); /* Adds definition */
+  transition: all 0.2s ease;
+}
 
+.btn-main:active {
+  background-color: var(--brand-gold);
+  color: var(--brand-navy);
+}
+
+/* Consistent styling for the "Select Exercises" summary */
+summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
         /* NAVIGATION */
         nav {
             display: flex;
@@ -302,4 +305,5 @@
 </script>
 </body>
 </html>
+
 
