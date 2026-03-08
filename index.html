@@ -31,6 +31,30 @@
 
         .card { background-color: var(--white); border-left: 5px solid var(--brand-gold); padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         
+        /* Button-style Exercise Selection */
+        .exercise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        .ex-btn {
+            background-color: var(--white);
+            border: 2px solid var(--brand-navy);
+            color: var(--brand-navy);
+            padding: 12px 8px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ex-btn.active {
+            background-color: var(--brand-navy);
+            color: var(--brand-gold);
+            border-color: var(--brand-gold);
+            transform: scale(0.98);
+        }
+
         .history-item-detail { background: #f8f9fa; border: 1px solid #eee; padding: 10px; border-radius: 5px; margin-top: 10px; }
         .history-notes { font-size: 0.85rem; color: #444; margin: 5px 0; font-style: italic; }
 
@@ -57,7 +81,7 @@
         #reportView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-body); z-index: 1000; overflow-y: auto; padding: 20px; }
         .add-ex-box { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; }
         .add-ex-box input { margin-bottom: 0; flex: 2; }
-        .add-ex-box button { flex: 1; background: var(--brand-gold); border: none; font-weight: bold; border-radius: 4px; }
+        .add-ex-box button { flex: 1; background: var(--brand-gold); border: none; font-weight: bold; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -82,7 +106,7 @@
         </div>
         
         <details class="card" style="padding:0;">
-            <summary><span>+ Select Exercises</span></summary>
+            <summary><span>+ Toggle Exercises</span></summary>
             <div class="exercise-grid" id="log-chips"></div>
             <div class="add-ex-box">
                 <input type="text" id="new-ex-name" placeholder="Add custom exercise...">
@@ -144,9 +168,9 @@
     function initLog() {
         const chipCont = document.getElementById('log-chips');
         chipCont.innerHTML = exerciseLibrary.sort().map(ex => `
-            <label class="chip" id="chip-${ex.replace(/\s/g,'-')}">
-                <input type="checkbox" value="${ex}" onchange="toggleLogEx(this)"> ${ex}
-            </label>
+            <div class="ex-btn" id="btn-ex-${ex.replace(/\s/g,'-')}" onclick="toggleExercise('${ex}')">
+                ${ex}
+            </div>
         `).join('');
         document.getElementById('log-date').valueAsDate = new Date();
     }
@@ -162,16 +186,31 @@
         }
     }
 
-    function toggleLogEx(cb) {
-        const name = cb.value;
+    function toggleExercise(name) {
         const id = name.replace(/\s+/g,'-');
-        if(cb.checked) {
+        const btn = document.getElementById(`btn-ex-${id}`);
+        const detailsContainer = document.getElementById('log-details');
+        const existingCard = document.getElementById(`detail-${id}`);
+
+        if (existingCard) {
+            // Deactivate
+            btn.classList.remove('active');
+            existingCard.remove();
+        } else {
+            // Activate
+            btn.classList.add('active');
             const row = document.createElement('div');
             row.className = 'card'; row.id = `detail-${id}`;
-            row.innerHTML = `<h3>${name}</h3><input type="number" class="sc" placeholder="Score 0-10"><textarea class="obs" rows="1" placeholder="Notes..."></textarea><button class="btn-rec btn-rec-themed" id="rec-${id}" onclick="handleVoice('${id}')">🎤 Voice Note</button><div id="audio-${id}"></div>`;
-            document.getElementById('log-details').appendChild(row);
-        } else {
-            const el = document.getElementById(`detail-${id}`); if(el) el.remove();
+            row.innerHTML = `
+                <h3>${name}</h3>
+                <label>Proficiency (0-10)</label>
+                <input type="number" class="sc" placeholder="Score">
+                <label>Drill Notes</label>
+                <textarea class="obs" rows="1" placeholder="Observations..."></textarea>
+                <button class="btn-rec btn-rec-themed" id="rec-${id}" onclick="handleVoice('${id}')">🎤 Voice Note</button>
+                <div id="audio-${id}"></div>
+            `;
+            detailsContainer.appendChild(row);
         }
     }
 
@@ -192,19 +231,14 @@
                     <div style="padding: 15px;">
                         <span style="font-size:0.7rem; color:#888;">${obj.updated ? 'Last Saved: ' + obj.updated : ''}</span>
                         <p style="font-size:0.8rem; background:#f4f4f4; padding:8px;">${obj.desc}</p>
-                        
                         <label>Target Achievement Date</label>
                         <input type="date" value="${obj.targetDate || ''}" onchange="updatePlanData(${idx}, 'targetDate', this.value)">
-                        
                         <label>Focus Notes</label>
                         <textarea onchange="updatePlanData(${idx}, 'userNotes', this.value)">${obj.userNotes || ''}</textarea>
-                        
                         <label>Proficiency</label>
                         <input type="range" min="0" max="10" value="${obj.rating || 0}" onchange="updatePlanData(${idx}, 'rating', this.value); renderPlan();">
-                        
                         <button class="btn-rec btn-rec-themed" id="rec-plan-${idx}" onclick="handleVoice('plan-${idx}')">🎤 Plan Voice Note</button>
                         <div id="audio-plan-${idx}">${obj.audio ? `<audio controls src="${obj.audio}" style="width:100%"></audio>` : ''}</div>
-                        
                         <button class="btn-main" style="background:var(--brand-gold); color:var(--brand-navy);" onclick="saveIndividualPlan(${idx})">💾 Save & History</button>
                     </div>
                 </details>`;
@@ -225,12 +259,9 @@
         localStorage.setItem('thornePlan', JSON.stringify(weeklyPlan));
 
         entries.push({
-            id: Date.now(), 
-            date: tsDate, 
-            type: 'plan_update', 
-            env: 'Objective Update',
-            targetDate: weeklyPlan[idx].targetDate, // Added target date to history
-            notes: `Objective: ${weeklyPlan[idx].title} (Target: ${weeklyPlan[idx].targetDate || 'None'})`,
+            id: Date.now(), date: tsDate, type: 'plan_update', env: 'Objective Update',
+            targetDate: weeklyPlan[idx].targetDate,
+            notes: `Objective: ${weeklyPlan[idx].title}`,
             audio: weeklyPlan[idx].audio,
             exercises: [{ name: weeklyPlan[idx].title, score: weeklyPlan[idx].rating, obs: weeklyPlan[idx].userNotes, audio: weeklyPlan[idx].audio }]
         });
@@ -282,6 +313,11 @@
                 audio: tempMemos[cleanId] || null
             };
         });
+
+        if (exList.length === 0) {
+            alert("Please select at least one exercise.");
+            return;
+        }
 
         entries.push({
             id: Date.now(), date: sessionDate, type: 'session_log', env: document.getElementById('log-env').value,
