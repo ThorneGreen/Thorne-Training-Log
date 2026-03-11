@@ -18,10 +18,11 @@
         
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-body); color: var(--brand-navy); margin: 0; padding: 0; }
 
+        /* HEADER MATCHES LOGO BACKGROUND */
         .app-header { background-color: var(--brand-navy); padding: 15px; display: flex; flex-direction: column; align-items: center; border-bottom: 4px solid var(--brand-gold); }
         .app-logo { max-width: 150px; height: auto; min-height: 50px; display: block; }
 
-        nav { display: flex; background-color: var(--brand-navy); position: sticky; top: 0; z-index: 100; }
+        nav { display: flex; background-color: var(--brand-navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
         nav button { flex: 1; padding: 15px; border: none; background: none; color: var(--brand-accent); font-weight: bold; font-size: 0.8rem; text-transform: uppercase; border-bottom: 3px solid transparent; }
         nav button.active { border-bottom: 3px solid var(--brand-gold); color: var(--brand-gold); background-color: rgba(255,255,255,0.05); }
 
@@ -31,7 +32,6 @@
 
         .card { background-color: var(--white); border-left: 5px solid var(--brand-gold); padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         
-        /* Button-style Exercise Selection */
         .exercise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
         .ex-btn {
             background-color: var(--white);
@@ -72,16 +72,28 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         
         .btn-main { width: 100%; background-color: var(--brand-navy); color: var(--brand-gold); padding: 18px; border: none; border-radius: 5px; font-weight: bold; font-size: 1rem; text-transform: uppercase; margin-bottom: 15px; }
-        .btn-delete { position: absolute; top: 10px; right: 10px; background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; z-index: 5; }
+        .btn-delete { position: absolute; top: 10px; right: 10px; background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; z-index: 10; }
 
         .history-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
         .tag-log { background: #e1f5fe; color: #01579b; }
         .tag-plan { background: #fff8e1; color: #ff8f00; }
+        .tag-objective-link { background: var(--brand-gold); color: var(--brand-navy); }
 
-        #reportView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-body); z-index: 1000; overflow-y: auto; padding: 20px; }
+        #reportView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-body); z-index: 1000; overflow-y: auto; padding: 0; }
+        .report-header { position: sticky; top: 0; background: var(--brand-navy); padding: 15px; z-index: 1001; border-bottom: 2px solid var(--brand-gold); }
+        .sort-bar { display: flex; gap: 5px; margin-top: 10px; }
+        .sort-bar button { flex: 1; font-size: 0.65rem; padding: 8px; border-radius: 4px; border: 1px solid var(--brand-gold); background: transparent; color: var(--brand-gold); font-weight: bold; text-transform: uppercase; }
+        .sort-bar button.active { background: var(--brand-gold); color: var(--brand-navy); }
+
         .add-ex-box { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; }
         .add-ex-box input { margin-bottom: 0; flex: 2; }
         .add-ex-box button { flex: 1; background: var(--brand-gold); border: none; font-weight: bold; border-radius: 4px; cursor: pointer; }
+
+        .history-summary-content { padding-right: 60px; pointer-events: none; width: 100%; }
+        .history-summary-content .hist-date { font-size: 1.1rem; color: var(--brand-navy); display: block; margin-bottom: 4px; }
+        .history-summary-content .hist-meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 4px; }
+        .history-summary-content .hist-details { font-size: 0.8rem; color: #666; display: block; line-height: 1.3; }
+        .ex-list-inline { color: var(--brand-navy); font-weight: bold; font-style: normal; }
     </style>
 </head>
 <body>
@@ -90,7 +102,7 @@
 
 <nav>
     <button id="nav-log" class="active" onclick="showPage('log')">Session Log</button>
-    <button id="nav-plan" onclick="showPage('plan')">Weekly Planner</button>
+    <button id="nav-plan" onclick="showPage('plan')">Objectives</button>
 </nav>
 
 <div class="container">
@@ -98,6 +110,10 @@
         <h1>Record Performance</h1>
         <div class="card">
             <label>Date</label><input type="date" id="log-date">
+            <label>Link to Weekly Objective</label>
+            <select id="log-objective-link">
+                <option value="">-- No Specific Objective --</option>
+            </select>
             <label>Environment</label>
             <select id="log-env">
                 <option>Home/Garden</option><option>Public Park</option>
@@ -128,15 +144,21 @@
     </div>
 
     <div id="page-plan" class="page">
-        <h1>Weekly Objectives</h1>
-        <button class="btn-main" style="background-color: var(--brand-gold); color: var(--brand-navy);" onclick="loadThorneTemplate()">Load Thorne Standard Plan</button>
+        <button class="btn-main" style="background-color: var(--brand-gold); color: var(--brand-navy); margin-top: 15px;" onclick="loadThorneTemplate()">Load Thorne Standard Plan</button>
         <div id="plan-container"></div>
     </div>
 </div>
 
 <div id="reportView">
-    <button onclick="document.getElementById('reportView').style.display='none'" class="btn-rec" style="background:#444;">Close History</button>
-    <div id="reportContent"></div>
+    <div class="report-header">
+        <button onclick="document.getElementById('reportView').style.display='none'" class="btn-rec" style="background:#444; margin-bottom: 10px;">Close History</button>
+        <div class="sort-bar">
+            <button id="sort-date" class="active" onclick="viewHistory('date')">Date</button>
+            <button id="sort-objective" onclick="viewHistory('objective')">Objective</button>
+            <button id="sort-exercise" onclick="viewHistory('exercise')">Exercise</button>
+        </div>
+    </div>
+    <div id="reportContent" style="padding: 20px;"></div>
 </div>
 
 <script>
@@ -163,6 +185,15 @@
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(`page-${pageId}`).classList.add('active');
         document.getElementById(`nav-${pageId}`).classList.add('active');
+        if(pageId === 'log') updateObjectiveDropdown();
+    }
+
+    function updateObjectiveDropdown() {
+        const select = document.getElementById('log-objective-link');
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">-- No Specific Objective --</option>' + 
+            weeklyPlan.map(obj => `<option value="${obj.title}">${obj.title}</option>`).join('');
+        select.value = currentVal;
     }
 
     function initLog() {
@@ -173,6 +204,7 @@
             </div>
         `).join('');
         document.getElementById('log-date').valueAsDate = new Date();
+        updateObjectiveDropdown();
     }
 
     function addNewExercise() {
@@ -193,11 +225,9 @@
         const existingCard = document.getElementById(`detail-${id}`);
 
         if (existingCard) {
-            // Deactivate
             btn.classList.remove('active');
             existingCard.remove();
         } else {
-            // Activate
             btn.classList.add('active');
             const row = document.createElement('div');
             row.className = 'card'; row.id = `detail-${id}`;
@@ -216,6 +246,7 @@
 
     function loadThorneTemplate() {
         weeklyPlan = thorneTemplate.map(t => ({ ...t, userNotes: '', rating: 0, audio: null, updated: null, targetDate: '' }));
+        localStorage.setItem('thornePlan', JSON.stringify(weeklyPlan));
         renderPlan();
     }
 
@@ -303,6 +334,7 @@
 
     function saveLog() {
         const sessionDate = document.getElementById('log-date').value;
+        const linkedObjective = document.getElementById('log-objective-link').value;
         const exList = Array.from(document.querySelectorAll('#log-details .card')).map(card => {
             const name = card.querySelector('h3').innerText;
             const cleanId = name.replace(/\s+/g,'-');
@@ -320,8 +352,13 @@
         }
 
         entries.push({
-            id: Date.now(), date: sessionDate, type: 'session_log', env: document.getElementById('log-env').value,
-            notes: document.getElementById('log-notes').value, audio: tempMemos['general'],
+            id: Date.now(), 
+            date: sessionDate, 
+            type: 'session_log', 
+            linkedObj: linkedObjective,
+            env: document.getElementById('log-env').value,
+            notes: document.getElementById('log-notes').value, 
+            audio: tempMemos['general'],
             exercises: exList
         });
         localStorage.setItem('thorneLogs', JSON.stringify(entries));
@@ -337,31 +374,71 @@
         }
     }
 
-    function viewHistory() {
+    function viewHistory(sortBy = 'date') {
         const report = document.getElementById('reportContent');
-        if (entries.length === 0) { report.innerHTML = "<p>No history.</p>"; } 
-        else {
-            report.innerHTML = [...entries].sort((a,b) => b.id - a.id).map(e => `
-                <div class="card">
-                    <button class="btn-delete" onclick="deleteEntry(${e.id})">Delete</button>
-                    <span class="history-tag ${e.type === 'plan_update' ? 'tag-plan' : 'tag-log'}">${e.type === 'plan_update' ? 'Objective' : 'Session'}</span>
-                    <br><strong>${e.date}</strong> | <span>${e.env}</span>
-                    <p><strong>General Notes:</strong> ${e.notes || 'None'}</p>
-                    ${e.targetDate ? `<p style="font-size:0.8rem; color:var(--brand-red);"><strong>Target Achievement Date: ${e.targetDate}</strong></p>` : ''}
-                    ${e.audio ? `<div><small>General Recording:</small><audio controls src="${e.audio}" style="width:100%"></audio></div>` : ''}
-                    
-                    <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
-                        ${e.exercises.map(ex => `
-                            <div class="history-item-detail">
-                                <strong>${ex.name}</strong> - Proficiency: ${ex.score}/10
-                                <div class="history-notes">${ex.obs || 'No drill notes.'}</div>
-                                ${ex.audio ? `<audio controls src="${ex.audio}" style="width:100%; margin-top:5px;"></audio>` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
+        
+        document.querySelectorAll('.sort-bar button').forEach(b => b.classList.remove('active'));
+        document.getElementById(`sort-${sortBy}`).classList.add('active');
+
+        if (entries.length === 0) { 
+            report.innerHTML = "<p>No history.</p>"; 
+            document.getElementById('reportView').style.display = 'block';
+            return; 
+        } 
+
+        let sorted = [...entries];
+
+        if (sortBy === 'date') {
+            sorted.sort((a, b) => b.id - a.id);
+        } else if (sortBy === 'objective') {
+            sorted.sort((a, b) => (a.linkedObj || 'Z').localeCompare(b.linkedObj || 'Z'));
+        } else if (sortBy === 'exercise') {
+            let flattened = [];
+            entries.forEach(e => {
+                e.exercises.forEach(ex => {
+                    flattened.push({ ...e, singleExName: ex.name });
+                });
+            });
+            sorted = flattened.sort((a, b) => a.singleExName.localeCompare(b.singleExName));
         }
+
+        report.innerHTML = sorted.map(e => {
+            const exNames = e.exercises.map(ex => ex.name).join(', ');
+            return `
+            <div class="card" style="padding:0;">
+                <button class="btn-delete" onclick="deleteEntry(${e.id})">Del</button>
+                <details>
+                    <summary>
+                        <div class="history-summary-content">
+                            <strong class="hist-date">${e.date}</strong>
+                            <div class="hist-meta">
+                                <span class="history-tag ${e.type === 'plan_update' ? 'tag-plan' : 'tag-log'}">${e.type === 'plan_update' ? 'Objective' : 'Session'}</span>
+                                ${e.linkedObj ? `<span class="history-tag tag-objective-link">🎯 ${e.linkedObj}</span>` : ''}
+                            </div>
+                            <div class="hist-details">
+                                <span>📍 ${e.env}</span><br>
+                                <span class="ex-list-inline">🛠️ ${sortBy === 'exercise' ? `<strong>${e.singleExName}</strong>` : exNames}</span>
+                            </div>
+                        </div>
+                    </summary>
+                    <div style="padding: 0 15px 15px 15px;">
+                        <p><strong>General Notes:</strong> ${e.notes || 'None'}</p>
+                        ${e.targetDate ? `<p style="font-size:0.8rem; color:var(--brand-red);"><strong>Target Achievement Date: ${e.targetDate}</strong></p>` : ''}
+                        ${e.audio ? `<div><small>General Recording:</small><audio controls src="${e.audio}" style="width:100%"></audio></div>` : ''}
+                        <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                            ${e.exercises.map(ex => `
+                                <div class="history-item-detail" ${sortBy === 'exercise' && ex.name === e.singleExName ? 'style="border: 2px solid var(--brand-gold)"' : ''}>
+                                    <strong>${ex.name}</strong> - Proficiency: ${ex.score}/10
+                                    <div class="history-notes">${ex.obs || 'No drill notes.'}</div>
+                                    ${ex.audio ? `<audio controls src="${ex.audio}" style="width:100%; margin-top:5px;"></audio>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </details>
+            </div>
+        `}).join('');
+        
         document.getElementById('reportView').style.display = 'block';
     }
 
