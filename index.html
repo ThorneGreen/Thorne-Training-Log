@@ -3,446 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THORNE Training App</title>
+    <title>THORNE PRO - Master Suite</title>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <style>
-        :root {
-            --brand-navy: #0D1B2A;    
-            --brand-gold: #D4AF37;    
-            --brand-accent: #E0E1DD;  
-            --brand-red: #8B0000;     
-            --white: #FFFFFF;
-            --bg-body: #F0F2F5;
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-body); color: var(--brand-navy); margin: 0; padding: 0; }
-
-        /* HEADER MATCHES LOGO BACKGROUND */
-        .app-header { background-color: var(--brand-navy); padding: 15px; display: flex; flex-direction: column; align-items: center; border-bottom: 4px solid var(--brand-gold); }
-        .app-logo { max-width: 150px; height: auto; min-height: 50px; display: block; }
-
-        nav { display: flex; background-color: var(--brand-navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        nav button { flex: 1; padding: 15px; border: none; background: none; color: var(--brand-accent); font-weight: bold; font-size: 0.8rem; text-transform: uppercase; border-bottom: 3px solid transparent; }
-        nav button.active { border-bottom: 3px solid var(--brand-gold); color: var(--brand-gold); background-color: rgba(255,255,255,0.05); }
-
-        .container { max-width: 600px; margin: auto; padding: 15px; }
+        :root { --navy: #0D1B2A; --gold: #D4AF37; --cream: #E0E1DD; --bg: #F0F2F5; --white: #FFFFFF; --danger: #8B0000; --success: #2D6A4F; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--navy); margin: 0; padding-bottom: 80px; }
+        .header { background: var(--navy); padding: 20px; text-align: center; border-bottom: 4px solid var(--gold); }
+        .header h1 { color: var(--gold); margin: 0; font-size: 1.2rem; letter-spacing: 3px; text-transform: uppercase; }
+        nav { display: flex; background: var(--navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.2); }
+        nav button { flex: 1; padding: 15px; border: none; background: none; color: var(--cream); font-weight: bold; font-size: 0.7rem; border-bottom: 3px solid transparent; }
+        nav button.active { border-bottom: 3px solid var(--gold); color: var(--gold); }
+        .container { max-width: 500px; margin: auto; padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-
-        .card { background-color: var(--white); border-left: 5px solid var(--brand-gold); padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         
-        .exercise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
-        .ex-btn {
-            background-color: var(--white);
-            border: 2px solid var(--brand-navy);
-            color: var(--brand-navy);
-            padding: 12px 8px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .ex-btn.active {
-            background-color: var(--brand-navy);
-            color: var(--brand-gold);
-            border-color: var(--brand-gold);
-            transform: scale(0.98);
-        }
-
-        .history-item-detail { background: #f8f9fa; border: 1px solid #eee; padding: 10px; border-radius: 5px; margin-top: 10px; }
-        .history-notes { font-size: 0.85rem; color: #444; margin: 5px 0; font-style: italic; }
-
-        h1 { text-align: center; color: var(--brand-navy); font-size: 1.4rem; text-transform: uppercase; margin: 10px 0;}
-        h3 { margin: 0 0 10px 0; color: var(--brand-navy); font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        label { display: block; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px; color: #444; text-transform: uppercase; }
+        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid var(--gold); overflow: hidden; transition: all 0.2s ease; }
+        summary { padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+        summary::-webkit-details-marker { display: none; }
+        .card-inner { padding: 15px; border-top: 1px solid #eee; background: #fafafa; }
         
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 12px; font-size: 16px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; box-sizing: border-box; }
+        .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 16px; border: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; margin-bottom: 10px; }
+        .btn-rec { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; margin-bottom: 10px; font-weight: bold; cursor: pointer; }
+        .btn-file { background: #f8f8f8; border: 1px dashed #ccc; padding: 10px; text-align: center; display: block; border-radius: 5px; font-size: 0.8rem; margin-bottom: 10px; cursor: pointer; }
+        .btn-delete { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 8px; border-radius: 5px; font-size: 0.7rem; width: 100%; margin-top: 15px; font-weight: bold; cursor: pointer; }
 
-        summary { padding: 15px; font-weight: bold; cursor: pointer; list-style: none; outline: none; display: flex; justify-content: space-between; align-items: center; }
+        .media-prev { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .media-prev * { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gold); background: #000; }
+        .hist-media { width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; margin-top: 10px; background: #000; display: block; }
+        audio { width: 100%; height: 35px; margin-top: 5px; display: block; }
         
-        .btn-rec { width: 100%; background-color: var(--brand-red); color: white; border: none; padding: 12px; border-radius: 5px; font-weight: bold; margin-bottom: 10px; }
-        .btn-rec-themed { background-color: var(--brand-navy); color: var(--brand-gold); }
-        .btn-rec.recording { animation: pulse 1s infinite; background-color: red !important; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .drill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 15px; }
+        .drill-chip { border: 2px solid var(--navy); padding: 10px; border-radius: 6px; text-align: center; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .drill-chip.active { background: var(--navy); color: var(--gold); }
         
-        .btn-main { width: 100%; background-color: var(--brand-navy); color: var(--brand-gold); padding: 18px; border: none; border-radius: 5px; font-weight: bold; font-size: 1rem; text-transform: uppercase; margin-bottom: 15px; }
-        .btn-delete { position: absolute; top: 10px; right: 10px; background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; z-index: 10; }
-
-        .history-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
-        .tag-log { background: #e1f5fe; color: #01579b; }
-        .tag-plan { background: #fff8e1; color: #ff8f00; }
-        .tag-objective-link { background: var(--brand-gold); color: var(--brand-navy); }
-
-        #reportView { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-body); z-index: 1000; overflow-y: auto; padding: 0; }
-        .report-header { position: sticky; top: 0; background: var(--brand-navy); padding: 15px; z-index: 1001; border-bottom: 2px solid var(--brand-gold); }
-        .sort-bar { display: flex; gap: 5px; margin-top: 10px; }
-        .sort-bar button { flex: 1; font-size: 0.65rem; padding: 8px; border-radius: 4px; border: 1px solid var(--brand-gold); background: transparent; color: var(--brand-gold); font-weight: bold; text-transform: uppercase; }
-        .sort-bar button.active { background: var(--brand-gold); color: var(--brand-navy); }
-
-        .add-ex-box { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; }
-        .add-ex-box input { margin-bottom: 0; flex: 2; }
-        .add-ex-box button { flex: 1; background: var(--brand-gold); border: none; font-weight: bold; border-radius: 4px; cursor: pointer; }
-
-        .history-summary-content { padding-right: 60px; pointer-events: none; width: 100%; }
-        .history-summary-content .hist-date { font-size: 1.1rem; color: var(--brand-navy); display: block; margin-bottom: 4px; }
-        .history-summary-content .hist-meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 4px; }
-        .history-summary-content .hist-details { font-size: 0.8rem; color: #666; display: block; line-height: 1.3; }
-        .ex-list-inline { color: var(--brand-navy); font-weight: bold; font-style: normal; }
+        .stars { display: flex; gap: 8px; color: #ccc; font-size: 2rem; cursor: pointer; margin: 5px 0 15px 0; }
+        .star.filled { color: var(--gold); }
+        .summary-stars { color: var(--gold); font-size: 0.9rem; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div class="app-header"><img src="logo.png" alt="THORNE LOGO" class="app-logo"></div>
+<div class="header"><h1>THORNE Master Log</h1></div>
 
 <nav>
-    <button id="nav-log" class="active" onclick="showPage('log')">Session Log</button>
+    <button id="nav-log" class="active" onclick="showPage('log')">Log</button>
     <button id="nav-plan" onclick="showPage('plan')">Objectives</button>
+    <button id="nav-hist" onclick="showPage('hist')">History</button>
 </nav>
 
 <div class="container">
     <div id="page-log" class="page active">
-        <h1>Record Performance</h1>
-        <div class="card">
+        <div class="card"><div class="card-inner">
             <label>Date</label><input type="date" id="log-date">
-            <label>Link to Weekly Objective</label>
-            <select id="log-objective-link">
-                <option value="">-- No Specific Objective --</option>
-            </select>
-            <label>Environment</label>
-            <select id="log-env">
-                <option>Home/Garden</option><option>Public Park</option>
-                <option>Training Club</option><option>Street/Busy</option>
-            </select>
-        </div>
-        
-        <details class="card" style="padding:0;">
-            <summary><span>+ Toggle Exercises</span></summary>
-            <div class="exercise-grid" id="log-chips"></div>
-            <div class="add-ex-box">
-                <input type="text" id="new-ex-name" placeholder="Add custom exercise...">
-                <button onclick="addNewExercise()">ADD</button>
-            </div>
+            <label>Link Objective</label><select id="log-obj-link"></select>
+            <label>Location</label><select id="log-env"><option>Home</option><option>Garden</option><option>Club</option><option>Public</option></select>
+        </div></div>
+
+        <details class="card"><summary>Select Drills</summary>
+            <div class="drill-grid" id="drill-selector"></div>
+            <div style="padding: 10px;"><input type="text" id="custom-drill-name" placeholder="Drill name..."><button class="btn-main" style="padding:10px;" onclick="addCustomDrill()">+ Add Drill</button></div>
         </details>
-
-        <div id="log-details"></div>
-
-        <div class="card">
-            <label>General Summary</label>
-            <textarea id="log-notes" rows="3" placeholder="Overall notes..."></textarea>
-            <button class="btn-rec btn-rec-themed" id="btn-rec-general" onclick="handleVoice('general')">🎤 Record General Memo</button>
+        
+        <div id="active-drills-area"></div>
+        
+        <div class="card"><div class="card-inner">
+            <label>Session Summary</label><textarea id="log-summary" rows="3"></textarea>
+            <label class="btn-file">📷 Upload Session Media<input type="file" accept="image/*,video/*" multiple onchange="captureMedia(this, 'general')" style="display:none"></label>
+            <div id="prev-general" class="media-prev"></div>
+            <button class="btn-rec" id="rec-general" onclick="captureVoice('general')">🎤 Session Voice Note</button>
             <div id="audio-general"></div>
-        </div>
-
-        <button class="btn-main" onclick="saveLog()">Save Session</button>
-        <button class="btn-main" style="background:#777;" onclick="viewHistory()">View History</button>
+        </div></div>
+        
+        <button class="btn-main" id="btn-save-session" onclick="saveSession()">Confirm & Save</button>
     </div>
 
     <div id="page-plan" class="page">
-        <button class="btn-main" style="background-color: var(--brand-gold); color: var(--brand-navy); margin-top: 15px;" onclick="loadThorneTemplate()">Load Thorne Standard Plan</button>
-        <div id="plan-container"></div>
+        <button class="btn-main" onclick="expandAll()">Expand/Collapse All</button>
+        <div id="objective-list"></div>
+        <hr style="border:0; border-top:2px dashed var(--navy); margin:25px 0;">
+        <details class="card"><summary>+ Add New Objective Set</summary>
+            <div class="card-inner">
+                <input type="text" id="new-obj-title" placeholder="Objective Name">
+                <textarea id="new-obj-desc" placeholder="Details..."></textarea>
+                <button class="btn-main" onclick="addNewSet()">Create New Set</button>
+            </div>
+        </details>
     </div>
-</div>
 
-<div id="reportView">
-    <div class="report-header">
-        <button onclick="document.getElementById('reportView').style.display='none'" class="btn-rec" style="background:#444; margin-bottom: 10px;">Close History</button>
-        <div class="sort-bar">
-            <button id="sort-date" class="active" onclick="viewHistory('date')">Date</button>
-            <button id="sort-objective" onclick="viewHistory('objective')">Objective</button>
-            <button id="sort-exercise" onclick="viewHistory('exercise')">Exercise</button>
-        </div>
-    </div>
-    <div id="reportContent" style="padding: 20px;"></div>
+    <div id="page-hist" class="page"><div id="history-container"></div></div>
 </div>
 
 <script>
-    const defaultExercises = ["Rear-End Aware", "Sit", "Stand", "Down", "Heeling", "Engagement", "About Turn", "Stay", "Calmness", "Ball Work"];
-    const thorneTemplate = [
-        { title: "1. Rear-End Awareness", desc: "Pivot Block Work. Stand in front and Heel position pivot." },
-        { title: "2. Position Changes", desc: "Tucked movements: Butt back for Down, forward for Sit." },
-        { title: "3. Engagement & Motivation", desc: "Push for intensity. 'Jump out of the box' maneuvers." },
-        { title: "4. Heeling & Footwork", desc: "Fancy feet. Shuffles, 10 steps. Leash pops for focus." },
-        { title: "5. The About-Turn", desc: "Right leg forward, pull Thorne right, body left." },
-        { title: "6. Stay Command", desc: "Release with right foot. Build duration, varied orientation." },
-        { title: "7. Calmness & Regulation", desc: "The 'Chill' after work. Correct vocalizing." },
-        { title: "8. Ball Work", desc: "Two balls. Focus on 'Leave' to get the focus reward." }
-    ];
+    const db = new Dexie("ThorneProDB");
+    db.version(18).stores({ 
+        logs: '++id, date, obj', 
+        plan: '++id, title, isFoundational, rating, lastRevised' 
+    });
 
-    let exerciseLibrary = JSON.parse(localStorage.getItem('thorneLibrary')) || defaultExercises;
-    let entries = JSON.parse(localStorage.getItem('thorneLogs')) || [];
-    let weeklyPlan = JSON.parse(localStorage.getItem('thornePlan')) || [];
-    let activeRecorders = {};
-    let tempMemos = {};
+    let activeRecorders = {}, tempAudios = {}, tempMedia = {};
 
-    function showPage(pageId) {
+    async function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById(`page-${pageId}`).classList.add('active');
-        document.getElementById(`nav-${pageId}`).classList.add('active');
-        if(pageId === 'log') updateObjectiveDropdown();
+        document.getElementById('page-' + id).classList.add('active');
+        document.getElementById('nav-' + id).classList.add('active');
+        if(id === 'plan') renderObjectives();
+        if(id === 'log') updateDropdown();
+        if(id === 'hist') renderHistory();
     }
 
-    function updateObjectiveDropdown() {
-        const select = document.getElementById('log-objective-link');
-        const currentVal = select.value;
-        select.innerHTML = '<option value="">-- No Specific Objective --</option>' + 
-            weeklyPlan.map(obj => `<option value="${obj.title}">${obj.title}</option>`).join('');
-        select.value = currentVal;
-    }
-
-    function initLog() {
-        const chipCont = document.getElementById('log-chips');
-        chipCont.innerHTML = exerciseLibrary.sort().map(ex => `
-            <div class="ex-btn" id="btn-ex-${ex.replace(/\s/g,'-')}" onclick="toggleExercise('${ex}')">
-                ${ex}
-            </div>
-        `).join('');
-        document.getElementById('log-date').valueAsDate = new Date();
-        updateObjectiveDropdown();
-    }
-
-    function addNewExercise() {
-        const input = document.getElementById('new-ex-name');
-        const name = input.value.trim();
-        if (name && !exerciseLibrary.includes(name)) {
-            exerciseLibrary.push(name);
-            localStorage.setItem('thorneLibrary', JSON.stringify(exerciseLibrary));
-            input.value = '';
-            initLog();
-        }
-    }
-
-    function toggleExercise(name) {
-        const id = name.replace(/\s+/g,'-');
-        const btn = document.getElementById(`btn-ex-${id}`);
-        const detailsContainer = document.getElementById('log-details');
-        const existingCard = document.getElementById(`detail-${id}`);
-
-        if (existingCard) {
-            btn.classList.remove('active');
-            existingCard.remove();
-        } else {
-            btn.classList.add('active');
-            const row = document.createElement('div');
-            row.className = 'card'; row.id = `detail-${id}`;
-            row.innerHTML = `
-                <h3>${name}</h3>
-                <label>Proficiency (0-10)</label>
-                <input type="number" class="sc" placeholder="Score">
-                <label>Drill Notes</label>
-                <textarea class="obs" rows="1" placeholder="Observations..."></textarea>
-                <button class="btn-rec btn-rec-themed" id="rec-${id}" onclick="handleVoice('${id}')">🎤 Voice Note</button>
-                <div id="audio-${id}"></div>
-            `;
-            detailsContainer.appendChild(row);
-        }
-    }
-
-    function loadThorneTemplate() {
-        weeklyPlan = thorneTemplate.map(t => ({ ...t, userNotes: '', rating: 0, audio: null, updated: null, targetDate: '' }));
-        localStorage.setItem('thornePlan', JSON.stringify(weeklyPlan));
-        renderPlan();
-    }
-
-    function renderPlan() {
-        const cont = document.getElementById('plan-container');
-        cont.innerHTML = '';
-        weeklyPlan.forEach((obj, idx) => {
-            const div = document.createElement('div');
-            div.className = 'card'; div.style.padding = '0'; 
-            div.innerHTML = `
-                <details>
-                    <summary><span>${obj.title}</span><span style="color:var(--brand-gold);">★ ${obj.rating || 0}</span></summary>
-                    <div style="padding: 15px;">
-                        <span style="font-size:0.7rem; color:#888;">${obj.updated ? 'Last Saved: ' + obj.updated : ''}</span>
-                        <p style="font-size:0.8rem; background:#f4f4f4; padding:8px;">${obj.desc}</p>
-                        <label>Target Achievement Date</label>
-                        <input type="date" value="${obj.targetDate || ''}" onchange="updatePlanData(${idx}, 'targetDate', this.value)">
-                        <label>Focus Notes</label>
-                        <textarea onchange="updatePlanData(${idx}, 'userNotes', this.value)">${obj.userNotes || ''}</textarea>
-                        <label>Proficiency</label>
-                        <input type="range" min="0" max="10" value="${obj.rating || 0}" onchange="updatePlanData(${idx}, 'rating', this.value); renderPlan();">
-                        <button class="btn-rec btn-rec-themed" id="rec-plan-${idx}" onclick="handleVoice('plan-${idx}')">🎤 Plan Voice Note</button>
-                        <div id="audio-plan-${idx}">${obj.audio ? `<audio controls src="${obj.audio}" style="width:100%"></audio>` : ''}</div>
-                        <button class="btn-main" style="background:var(--brand-gold); color:var(--brand-navy);" onclick="saveIndividualPlan(${idx})">💾 Save & History</button>
-                    </div>
-                </details>`;
-            cont.appendChild(div);
-        });
-    }
-
-    function updatePlanData(idx, key, val) { 
-        weeklyPlan[idx][key] = val; 
-        localStorage.setItem('thornePlan', JSON.stringify(weeklyPlan));
-    }
-
-    function saveIndividualPlan(idx) {
-        const now = new Date();
-        const tsDate = now.toISOString().split('T')[0];
-        const tsFull = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-        weeklyPlan[idx].updated = tsFull;
-        localStorage.setItem('thornePlan', JSON.stringify(weeklyPlan));
-
-        entries.push({
-            id: Date.now(), date: tsDate, type: 'plan_update', env: 'Objective Update',
-            targetDate: weeklyPlan[idx].targetDate,
-            notes: `Objective: ${weeklyPlan[idx].title}`,
-            audio: weeklyPlan[idx].audio,
-            exercises: [{ name: weeklyPlan[idx].title, score: weeklyPlan[idx].rating, obs: weeklyPlan[idx].userNotes, audio: weeklyPlan[idx].audio }]
-        });
-        localStorage.setItem('thorneLogs', JSON.stringify(entries));
-        alert("Saved to History");
-        renderPlan();
-    }
-
-    async function handleVoice(id) {
-        const btn = document.getElementById(`rec-${id}`) || document.getElementById(`btn-rec-${id}`) || document.getElementById(`rec-plan-${id.split('-')[1]}`);
-        if (!activeRecorders[id]) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(stream);
-                let chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'audio/mp4' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(blob);
-                    reader.onloadend = () => {
-                        const base64 = reader.result;
-                        if(id.startsWith('plan-')) { weeklyPlan[id.split('-')[1]].audio = base64; } 
-                        else { tempMemos[id] = base64; }
-                        document.getElementById(`audio-${id}`).innerHTML = `<audio controls src="${base64}" style="width:100%; margin-top:5px;"></audio>`;
-                        localStorage.setItem('thornePlan', JSON.stringify(weeklyPlan));
-                    };
-                    stream.getTracks().forEach(t => t.stop());
-                };
-                recorder.start();
-                activeRecorders[id] = recorder;
-                btn.classList.add('recording'); btn.innerText = "🛑 STOPPING...";
-            } catch (err) { alert("Mic error."); }
-        } else {
-            activeRecorders[id].stop(); delete activeRecorders[id];
-            btn.classList.remove('recording'); btn.innerText = "🎤 RECORDED";
-        }
-    }
-
-    function saveLog() {
-        const sessionDate = document.getElementById('log-date').value;
-        const linkedObjective = document.getElementById('log-objective-link').value;
-        const exList = Array.from(document.querySelectorAll('#log-details .card')).map(card => {
-            const name = card.querySelector('h3').innerText;
-            const cleanId = name.replace(/\s+/g,'-');
-            return {
-                name: name,
-                score: card.querySelector('.sc').value || 0,
-                obs: card.querySelector('.obs').value,
-                audio: tempMemos[cleanId] || null
+    // --- MEDIA ---
+    function captureMedia(input, key) {
+        const files = Array.from(input.files);
+        if(!tempMedia[key]) tempMedia[key] = [];
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                tempMedia[key].push({ type: file.type, data: e.target.result });
+                const tag = file.type.startsWith('video') ? 'video' : 'img';
+                const container = document.getElementById('prev-' + key);
+                if (container) container.innerHTML += `<${tag} src="${e.target.result}" ${tag==='video'?'muted':''}></${tag}>`;
             };
+            reader.readAsDataURL(file);
         });
+    }
 
-        if (exList.length === 0) {
-            alert("Please select at least one exercise.");
-            return;
+    async function captureVoice(key) {
+        const btn = document.getElementById('rec-' + key);
+        if (!activeRecorders[key]) {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            let chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const reader = new FileReader();
+                reader.readAsDataURL(new Blob(chunks, { type: 'audio/mp4' }));
+                reader.onloadend = async () => {
+                    const base64 = reader.result;
+                    if (!tempAudios[key]) tempAudios[key] = [];
+                    tempAudios[key].push(base64);
+                    const audioContainer = document.getElementById('audio-' + key);
+                    if (audioContainer) audioContainer.innerHTML += `<audio controls src="${base64}"></audio>`;
+                };
+            };
+            recorder.start(); activeRecorders[key] = recorder;
+            btn.innerText = "🛑 STOP";
+        } else {
+            activeRecorders[key].stop(); delete activeRecorders[key];
+            btn.innerText = "🎤 RECORD";
+        }
+    }
+
+    // --- OBJECTIVES (WITH STAR FIX) ---
+    async function renderObjectives() {
+        let plans = await db.plan.toArray();
+        if (plans.length === 0) {
+            const titles = ["1. Rear-End Awareness", "2. Position Changes", "3. Engagement", "4. Heeling", "5. About-Turn", "6. Stay", "7. Calmness", "8. Ball Work"];
+            await db.plan.bulkAdd(titles.map(t => ({ title: t, isFoundational: 1, rating: 0, notes: '', lastRevised: 'Template' })));
+            plans = await db.plan.toArray();
         }
 
-        entries.push({
-            id: Date.now(), 
-            date: sessionDate, 
-            type: 'session_log', 
-            linkedObj: linkedObjective,
-            env: document.getElementById('log-env').value,
-            notes: document.getElementById('log-notes').value, 
-            audio: tempMemos['general'],
-            exercises: exList
+        const container = document.getElementById('objective-list');
+        container.innerHTML = plans.map((p) => `
+            <details class="card" data-id="${p.id}">
+                <summary>
+                    <span>${p.title}</span>
+                    <span class="summary-stars">${'★'.repeat(p.rating || 0)}</span>
+                </summary>
+                <div class="card-inner">
+                    <label>Current Mastery Rating</label>
+                    <div class="stars">${[1,2,3,4,5].map(v => `
+                        <span class="star ${v <= (p.rating || 0) ? 'filled' : ''}" 
+                        onclick="setRating(${p.id}, ${v}, event)">★</span>`).join('')}
+                    </div>
+                    <textarea class="obj-notes" placeholder="Notes...">${p.notes || ''}</textarea>
+                    <button class="btn-main" style="background:var(--success); color:white; height:40px; padding:0;" onclick="saveObj(${p.id})">Save Progress</button>
+                    <div style="font-size:0.7rem; color:#888;">Last Revised: ${p.lastRevised || 'New'}</div>
+                    <button class="btn-delete" onclick="deleteEntry('plan', ${p.id})">Delete Objective</button>
+                </div>
+            </details>`).join('');
+    }
+
+    // STOP PROPAGATION HERE: This prevents the card from closing
+    async function setRating(id, val, e) { 
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        await db.plan.update(id, { rating: val }); 
+        renderObjectives(); 
+        // Force card to stay open
+        setTimeout(() => {
+            const card = document.querySelector(`details[data-id="${id}"]`);
+            if (card) card.open = true;
+        }, 10);
+    }
+
+    async function saveObj(id) {
+        const card = document.querySelector(`[data-id="${id}"]`);
+        await db.plan.update(id, { 
+            notes: card.querySelector('.obj-notes').value, 
+            lastRevised: new Date().toLocaleDateString() 
         });
-        localStorage.setItem('thorneLogs', JSON.stringify(entries));
-        alert("Session Saved!");
+        alert("Thorne's progress updated.");
+        renderObjectives();
+    }
+
+    function expandAll() { document.querySelectorAll('#objective-list details').forEach(d => d.open = !d.open); }
+
+    async function addNewSet() {
+        const t = document.getElementById('new-obj-title').value;
+        if(!t) return;
+        await db.plan.add({ title: t, isFoundational: 0, rating: 0, notes: '', lastRevised: 'New' });
+        document.getElementById('new-obj-title').value = ''; renderObjectives();
+    }
+
+    // --- LOGGING & HISTORY ---
+    let drillList = ["Rear-Aware", "Sit", "Stand", "Down", "Heeling", "Stay"];
+    function renderDrillSelector() {
+        document.getElementById('drill-selector').innerHTML = drillList.map(d => `<div class="drill-chip" id="chip-${d.replace(/\s/g,'')}" onclick="toggleDrill('${d}')">${d}</div>`).join('');
+    }
+    function toggleDrill(name) {
+        const id = name.replace(/\s/g,'');
+        const chip = document.getElementById('chip-'+id);
+        if(document.getElementById('card-'+id)) { document.getElementById('card-'+id).remove(); chip.classList.remove('active'); }
+        else {
+            chip.classList.add('active');
+            const div = document.createElement('div'); div.className = 'card'; div.id = 'card-'+id;
+            div.innerHTML = `<div class="card-inner"><strong>${name}</strong>
+                <input type="number" class="d-score" placeholder="Score 0-10"><textarea class="d-notes" placeholder="Notes..."></textarea>
+                <label class="btn-file">📷 Drill Media<input type="file" multiple onchange="captureMedia(this, '${id}')" style="display:none"></label>
+                <div id="prev-${id}" class="media-prev"></div>
+                <button class="btn-rec" id="rec-${id}" onclick="captureVoice('${id}')">🎤 Drill Voice</button>
+                <div id="audio-${id}"></div></div>`;
+            document.getElementById('active-drills-area').appendChild(div);
+        }
+    }
+
+    async function saveSession() {
+        const drillResults = [];
+        document.querySelectorAll('#active-drills-area .card').forEach(c => {
+            const name = c.querySelector('strong').innerText;
+            const id = name.replace(/\s/g,'');
+            drillResults.push({ name, score: c.querySelector('.d-score').value, notes: c.querySelector('.d-notes').value, media: tempMedia[id] || [], audios: tempAudios[id] || [] });
+        });
+        await db.logs.add({
+            date: document.getElementById('log-date').value,
+            obj: document.getElementById('log-obj-link').value || "General",
+            env: document.getElementById('log-env').value,
+            summary: document.getElementById('log-summary').value,
+            media: tempMedia['general'] || [],
+            audios: tempAudios['general'] || [],
+            drills: drillResults
+        });
         location.reload();
     }
 
-    function deleteEntry(id) {
-        if(confirm("Delete this entry?")) {
-            entries = entries.filter(e => e.id !== id);
-            localStorage.setItem('thorneLogs', JSON.stringify(entries));
-            viewHistory();
-        }
+    async function renderHistory() {
+        const logs = await db.logs.orderBy('date').reverse().toArray();
+        document.getElementById('history-container').innerHTML = logs.map(l => `
+            <details class="card">
+                <summary><strong>${l.date}</strong> - ${l.obj}</summary>
+                <div class="card-inner">
+                    <p>${l.summary}</p>
+                    ${(l.media || []).map(m => m.type.startsWith('video') ? `<video class="hist-media" controls src="${m.data}"></video>` : `<img class="hist-media" src="${m.data}">`).join('')}
+                    ${(l.audios || []).map(a => `<audio controls src="${a}"></audio>`).join('')}
+                    <hr>
+                    ${l.drills.map(d => `<div style="background:#eee; padding:10px; border-radius:5px; margin-bottom:10px;">
+                        <strong>${d.name}: ${d.score}/10</strong><br>${d.notes}
+                        ${(d.media || []).map(m => m.type.startsWith('video') ? `<video class="hist-media" controls src="${m.data}"></video>` : `<img class="hist-media" src="${m.data}">`).join('')}
+                        ${(d.audios || []).map(a => `<audio controls src="${a}"></audio>`).join('')}
+                    </div>`).join('')}
+                    <button class="btn-delete" onclick="deleteEntry('logs', ${l.id})">DELETE PERMANENTLY</button>
+                </div>
+            </details>`).join('');
     }
 
-    function viewHistory(sortBy = 'date') {
-        const report = document.getElementById('reportContent');
-        
-        document.querySelectorAll('.sort-bar button').forEach(b => b.classList.remove('active'));
-        document.getElementById(`sort-${sortBy}`).classList.add('active');
-
-        if (entries.length === 0) { 
-            report.innerHTML = "<p>No history.</p>"; 
-            document.getElementById('reportView').style.display = 'block';
-            return; 
-        } 
-
-        let sorted = [...entries];
-
-        if (sortBy === 'date') {
-            sorted.sort((a, b) => b.id - a.id);
-        } else if (sortBy === 'objective') {
-            sorted.sort((a, b) => (a.linkedObj || 'Z').localeCompare(b.linkedObj || 'Z'));
-        } else if (sortBy === 'exercise') {
-            let flattened = [];
-            entries.forEach(e => {
-                e.exercises.forEach(ex => {
-                    flattened.push({ ...e, singleExName: ex.name });
-                });
-            });
-            sorted = flattened.sort((a, b) => a.singleExName.localeCompare(b.singleExName));
-        }
-
-        report.innerHTML = sorted.map(e => {
-            const exNames = e.exercises.map(ex => ex.name).join(', ');
-            return `
-            <div class="card" style="padding:0;">
-                <button class="btn-delete" onclick="deleteEntry(${e.id})">Del</button>
-                <details>
-                    <summary>
-                        <div class="history-summary-content">
-                            <strong class="hist-date">${e.date}</strong>
-                            <div class="hist-meta">
-                                <span class="history-tag ${e.type === 'plan_update' ? 'tag-plan' : 'tag-log'}">${e.type === 'plan_update' ? 'Objective' : 'Session'}</span>
-                                ${e.linkedObj ? `<span class="history-tag tag-objective-link">🎯 ${e.linkedObj}</span>` : ''}
-                            </div>
-                            <div class="hist-details">
-                                <span>📍 ${e.env}</span><br>
-                                <span class="ex-list-inline">🛠️ ${sortBy === 'exercise' ? `<strong>${e.singleExName}</strong>` : exNames}</span>
-                            </div>
-                        </div>
-                    </summary>
-                    <div style="padding: 0 15px 15px 15px;">
-                        <p><strong>General Notes:</strong> ${e.notes || 'None'}</p>
-                        ${e.targetDate ? `<p style="font-size:0.8rem; color:var(--brand-red);"><strong>Target Achievement Date: ${e.targetDate}</strong></p>` : ''}
-                        ${e.audio ? `<div><small>General Recording:</small><audio controls src="${e.audio}" style="width:100%"></audio></div>` : ''}
-                        <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
-                            ${e.exercises.map(ex => `
-                                <div class="history-item-detail" ${sortBy === 'exercise' && ex.name === e.singleExName ? 'style="border: 2px solid var(--brand-gold)"' : ''}>
-                                    <strong>${ex.name}</strong> - Proficiency: ${ex.score}/10
-                                    <div class="history-notes">${ex.obs || 'No drill notes.'}</div>
-                                    ${ex.audio ? `<audio controls src="${ex.audio}" style="width:100%; margin-top:5px;"></audio>` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </details>
-            </div>
-        `}).join('');
-        
-        document.getElementById('reportView').style.display = 'block';
+    async function updateDropdown() {
+        const plans = await db.plan.toArray();
+        document.getElementById('log-obj-link').innerHTML = '<option value="">Independent Session</option>' + plans.map(p => `<option value="${p.title}">${p.title}</option>`).join('');
     }
 
-    initLog(); renderPlan();
+    async function deleteEntry(table, id) { if(confirm("Permanently delete?")) { await db[table].delete(id); table === 'logs' ? renderHistory() : renderObjectives(); } }
+
+    document.getElementById('log-date').valueAsDate = new Date();
+    renderDrillSelector();
+    showPage('log');
 </script>
 </body>
 </html>
