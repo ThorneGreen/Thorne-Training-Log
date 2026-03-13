@@ -32,10 +32,15 @@
         .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-rec { background: var(--danger); color: white; padding: 10px; border-radius: 6px; border: none; width: 100%; margin: 5px 0; font-weight: bold; cursor: pointer; }
         .edit-btn { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 1rem; }
+        .del-icon { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; opacity: 0.6; }
+        .del-icon:hover { opacity: 1; }
         .stars { font-size: 1.6rem; color: #ccc; cursor: pointer; display: flex; gap: 5px; }
         .stars .filled { color: var(--gold); }
         .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0; }
         .media-row img, .media-row video { width: 85px; height: 85px; object-fit: cover; border-radius: 4px; background: #000; flex-shrink: 0; }
+        .hist-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .hist-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; display: none; }
+        summary { cursor: pointer; font-weight: bold; outline: none; }
     </style>
 </head>
 <body>
@@ -58,6 +63,16 @@
         </div>
         <div class="card"><label>Mastery Overview</label><div id="dash-mastery-list"></div></div>
         <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
+        
+        <details style="margin-top: 30px; opacity: 0.7;">
+            <summary style="font-size: 0.7rem; color: #666; cursor: pointer; text-align: center;">System Settings</summary>
+            <div class="card" style="margin-top: 10px; border: 1px solid #ddd;">
+                <label>Backup Data</label>
+                <button class="btn-main" style="background: var(--success); color: white; margin-bottom: 15px;" onclick="exportData()">Export JSON Backup</button>
+                <label style="color: var(--danger);">Danger Zone</label>
+                <button class="btn-rec" onclick="resetSystem()">Factory Reset (Delete All)</button>
+            </div>
+        </details>
     </div>
 
     <div id="page-log" class="page">
@@ -86,17 +101,21 @@
 
     <div id="page-plan" class="page">
         <div id="plans-container"></div>
-        <div class="card">
-            <label>New Plan</label>
-            <input type="text" id="new-plan-input"><button class="btn-main" onclick="addPlan()">Add Plan</button>
-        </div>
+        <details class="card" style="padding:0;">
+            <summary style="padding:15px;">+ Create New Plan</summary>
+            <div style="padding:15px; border-top:1px solid #eee;">
+                <label>Plan Name</label>
+                <input type="text" id="new-plan-input">
+                <button class="btn-main" onclick="addPlan()">Add Plan</button>
+            </div>
+        </details>
     </div>
 
     <div id="page-hist" class="page"><div id="history-list"></div></div>
 
     <div id="page-rep" class="page">
         <div class="card"><label>Weekly Performance</label><div id="rep-volume"></div></div>
-        <div class="card"><label>Objective Mastery Chart</label><div id="rep-visual-chart"></div></div>
+        <div id="rep-visual-chart"></div>
     </div>
 </div>
 
@@ -116,7 +135,116 @@
         if(id === 'rep') renderReports();
     }
 
-    // --- MEDIA & VOICE ---
+    async function renderDashboard() {
+        const logs = await db.logs.toArray();
+        const plans = await db.plans.toArray();
+        const objs = await db.objectives.toArray();
+        document.getElementById('stat-total-logs').innerText = logs.length;
+        document.getElementById('stat-total-plans').innerText = plans.length;
+        const mastery = objs.filter(o => (o.rating || 0) >= 4).length;
+        const percent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
+        document.getElementById('dash-mastery-list').innerHTML = `<div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div>`;
+    }
+
+    async function renderReports() {
+        const logs = await db.logs.toArray();
+        const plans = await db.plans.toArray();
+        const objectives = await db.objectives.toArray();
+        const last7 = logs.filter(l => (new Date() - new Date(l.date)) / 86400000 <= 7).length;
+        document.getElementById('rep-volume').innerHTML = `Last 7 Days: <b>${last7} Sessions</b>`;
+        
+        let chartHtml = "";
+        for (let p of plans) {
+            const pObjs = objectives.filter(o => o.planId === p.id);
+            const avg = pObjs.length > 0 ? (pObjs.reduce((a, b) => a + (b.rating || 0), 0) / pObjs.length).toFixed(1) : 0;
+            chartHtml += `<div class="card" style="padding:0; overflow:hidden; margin-bottom:10px;">
+                <div onclick="toggle('rep-p-${p.id}')" style="padding:15px; background:var(--navy); color:var(--gold); display:flex; justify-content:space-between; cursor:pointer; font-weight:bold;">
+                    <span>${p.name}</span><span>Avg: ${avg}/5 ▾</span>
+                </div>
+                <div id="rep-p-${p.id}" style="display:none; padding:15px;">
+                    ${pObjs.map(o => `<div style="margin-bottom:10px;"><div style="font-size:0.7rem; display:flex; justify-content:space-between;"><span>${o.title}</span><b>${o.rating}/5</b></div>
+                    <div class="bar-bg"><div class="bar-fill" style="width:${(o.rating/5)*100}%"></div></div></div>`).join('')}
+                </div></div>`;
+        }
+        document.getElementById('rep-visual-chart').innerHTML = chartHtml;
+    }
+
+    async function renderPlans() {
+        const plans = await db.plans.toArray();
+        let html = "";
+        for(let p of plans) {
+            const objs = await db.objectives.where('planId').equals(p.id).toArray();
+            html += `<div class="plan-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span onclick="toggle('p-${p.id}')">${p.name}</span>
+                    <button class="edit-btn" onclick="editPlan(${p.id},'${p.name}')">✎</button>
+                </div>
+                <button class="del-icon" onclick="deletePlan(${p.id})">🗑️</button>
+            </div>
+            <div id="p-${p.id}" style="display:none; padding-left:10px; border-left:3px solid var(--navy); margin-bottom:20px;">
+                ${objs.map(o => `<div class="obj-card">
+                    <div class="obj-summary">
+                        <span onclick="toggle('o-${o.id}')" style="font-weight:bold;">${o.title}</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="stars" style="font-size:1rem;">
+                                ${[1,2,3,4,5].map(v => `<span onclick="updateMasteryRating(event, ${o.id}, ${v})" class="${v <= (o.rating || 0) ? 'filled' : ''}">★</span>`).join('')}
+                            </div>
+                            <button class="edit-btn" onclick="editObj(${o.id},'${o.title}')">✎</button>
+                            <button class="del-icon" style="font-size:0.8rem;" onclick="deleteObj(${o.id})">🗑️</button>
+                        </div>
+                    </div>
+                    <div id="o-${o.id}" class="obj-details" style="display:none;">
+                        <label>Criteria</label>
+                        <textarea onchange="updCri(${o.id}, this.value)">${o.criteria || ''}</textarea>
+                    </div>
+                </div>`).join('')}
+                <div style="padding:10px 0;">
+                    <input type="text" id="no-${p.id}" placeholder="Objective Name">
+                    <button class="btn-main" onclick="addObj(${p.id})">Add Objective</button>
+                </div>
+            </div>`;
+        }
+        document.getElementById('plans-container').innerHTML = html;
+    }
+
+    async function startNewSession() {
+        document.getElementById('session-init-view').style.display='none';
+        document.getElementById('session-active-card').style.display='block';
+        document.getElementById('log-date').valueAsDate = new Date();
+        const p = await db.plans.toArray();
+        document.getElementById('log-plan-link').innerHTML = '<option>Select Plan...</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
+        currentSessionRating = 0; sessionMedia = []; sessionAudios = [];
+        document.getElementById('session-media-prev').innerHTML = ""; document.getElementById('session-audio-prev').innerHTML = "";
+        renderStars();
+    }
+
+    async function updateObjectiveDropdown() {
+        const pId = parseInt(document.getElementById('log-plan-link').value);
+        const o = await db.objectives.where('planId').equals(pId).toArray();
+        document.getElementById('log-obj-link').innerHTML = '<option>Select Objective...</option>' + o.map(x => `<option value="${x.id}">${x.title}</option>`).join('');
+    }
+
+    async function loadExercises() {
+        const oId = parseInt(document.getElementById('log-obj-link').value);
+        const logs = await db.logs.where('objId').equals(oId).toArray();
+        const unique = [...new Set(logs.map(l => l.exercise).filter(Boolean))];
+        document.getElementById('log-ex-list').innerHTML = unique.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+    }
+
+    function addExerciseOnFly() {
+        const name = prompt("Exercise Name:");
+        if(name) { const sel = document.getElementById('log-ex-list'); sel.add(new Option(name, name, true, true)); }
+    }
+
+    async function saveFullSession() {
+        await db.logs.add({
+            date: document.getElementById('log-date').value, planId: parseInt(document.getElementById('log-plan-link').value),
+            objId: parseInt(document.getElementById('log-obj-link').value), exercise: document.getElementById('log-ex-list').value,
+            rating: currentSessionRating, summary: document.getElementById('log-summary').value, media: sessionMedia, audios: sessionAudios
+        });
+        showPage('hist');
+    }
+
     async function toggleVoiceRecording() {
         const btn = document.getElementById('session-rec-btn');
         if(!recorder) {
@@ -135,9 +263,7 @@
                 chunks = [];
             };
             recorder.start(); btn.innerText = "🛑 Stop Recording"; btn.style.background = "black";
-        } else {
-            recorder.stop(); recorder = null; btn.innerText = "🎤 Voice Note"; btn.style.background = "var(--danger)";
-        }
+        } else { recorder.stop(); recorder = null; btn.innerText = "🎤 Voice Note"; btn.style.background = "var(--danger)"; }
     }
 
     function handleSessionMedia(input) {
@@ -153,114 +279,43 @@
         reader.readAsDataURL(file);
     }
 
-    // --- CORE LOGIC ---
-    async function renderReports() {
-        const logs = await db.logs.toArray();
-        const plans = await db.plans.toArray();
-        const objectives = await db.objectives.toArray();
-        const last7 = logs.filter(l => (new Date() - new Date(l.date)) / 86400000 <= 7).length;
-        document.getElementById('rep-volume').innerHTML = `Last 7 Days: <b>${last7} Sessions</b>`;
-        
-        let chartHtml = "";
-        for(let p of plans) {
-            chartHtml += `<div style="font-weight:bold; margin-top:15px; font-size:0.8rem;">${p.name}</div>`;
-            const pObjs = objectives.filter(o => o.planId === p.id);
-            pObjs.forEach(o => {
-                const percent = ((o.rating || 0) / 5) * 100;
-                chartHtml += `<div style="font-size:0.7rem; margin-top:5px;">${o.title} (${o.rating}/5)</div><div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div>`;
-            });
-        }
-        document.getElementById('rep-visual-chart').innerHTML = chartHtml;
-    }
-
-    async function saveFullSession() {
-        await db.logs.add({
-            date: document.getElementById('log-date').value,
-            planId: parseInt(document.getElementById('log-plan-link').value),
-            objId: parseInt(document.getElementById('log-obj-link').value),
-            exercise: document.getElementById('log-ex-list').value,
-            rating: currentSessionRating,
-            summary: document.getElementById('log-summary').value,
-            media: sessionMedia, audios: sessionAudios
-        });
-        showPage('hist');
-    }
-
     async function renderHistory() {
         const logs = await db.logs.orderBy('date').reverse().toArray();
         let html = "";
         for(let l of logs) {
-            const p = await db.plans.get(l.planId);
-            const o = await db.objectives.get(l.objId);
-            html += `<div class="card" onclick="toggle('h-${l.id}')">
-                <b>${l.date}</b> | ${p?.name} > ${o?.title} <br><i>${l.exercise || ''}</i>
-                <div id="h-${l.id}" style="display:none; margin-top:10px; border-top:1px solid #eee;">
-                    <p>${l.summary}</p>
-                    <div class="media-row">${(l.media||[]).map(m => `<img src="${m.data}">`).join('')}</div>
-                </div>
-            </div>`;
+            const p = await db.plans.get(l.planId); const o = await db.objectives.get(l.objId);
+            html += `<div class="card"><div class="hist-summary" onclick="toggle('h-${l.id}')">
+                <div style="font-size:0.8rem;"><b>${l.date}</b> | ${p?.name || 'Deleted'} > ${o?.title || 'Deleted'} <br><i>${l.exercise || ''}</i></div>
+                <div style="color:var(--gold);">${'★'.repeat(l.rating)}</div></div>
+                <div id="h-${l.id}" class="hist-details">
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+                        <button onclick="deleteLog(${l.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.75rem; font-weight:bold;">🗑️ DELETE LOG</button>
+                    </div>
+                    <p style="white-space: pre-wrap; margin-top:0;">${l.summary || ''}</p>
+                    <div class="media-row">${(l.media||[]).map(m => m.type === 'video' ? `<video src="${m.data}" controls></video>` : `<img src="${m.data}">`).join('')}</div>
+                    ${(l.audios||[]).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('')}
+                </div></div>`;
         }
         document.getElementById('history-list').innerHTML = html;
     }
 
-    // (Remaining Plan/Dash/Dropdown functions kept identical to previously verified logic)
-    async function renderDashboard() {
-        const logs = await db.logs.toArray(); const plans = await db.plans.toArray(); const objs = await db.objectives.toArray();
-        document.getElementById('stat-total-logs').innerText = logs.length;
-        document.getElementById('stat-total-plans').innerText = plans.length;
-        const mastery = objs.filter(o => (o.rating || 0) >= 4).length;
-        const percent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
-        document.getElementById('dash-mastery-list').innerHTML = `<div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div>`;
+    async function exportData() {
+        const plans = await db.plans.toArray(); const objectives = await db.objectives.toArray(); const logs = await db.logs.toArray();
+        const dataStr = JSON.stringify({ plans, objectives, logs }, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a"); link.href = url; link.download = `thorne_pro_backup_${new Date().toISOString().slice(0,10)}.json`; link.click();
     }
 
-    async function renderPlans() {
-        const plans = await db.plans.toArray();
-        let html = "";
-        for(let p of plans) {
-            const objs = await db.objectives.where('planId').equals(p.id).toArray();
-            html += `<div class="plan-header"><span onclick="toggle('p-${p.id}')">${p.name}</span><button class="edit-btn" onclick="editPlan(${p.id},'${p.name}')">✎</button></div>
-                <div id="p-${p.id}" style="display:none; padding:10px;">
-                    ${objs.map(o => `<div class="obj-card"><div class="obj-summary"><span onclick="toggle('o-${o.id}')">${o.title}</span><button class="edit-btn" onclick="editObj(${o.id},'${o.title}')">✎</button></div>
-                    <div id="o-${o.id}" style="display:none; padding:10px;"><textarea onchange="updCri(${o.id},this.value)">${o.criteria||''}</textarea></div></div>`).join('')}
-                    <input type="text" id="no-${p.id}"><button onclick="addObj(${p.id})">Add Objective</button>
-                </div>`;
-        }
-        document.getElementById('plans-container').innerHTML = html;
-    }
-
-    async function startNewSession() {
-        document.getElementById('session-init-view').style.display='none';
-        document.getElementById('session-active-card').style.display='block';
-        document.getElementById('log-date').valueAsDate = new Date();
-        const p = await db.plans.toArray();
-        document.getElementById('log-plan-link').innerHTML = '<option>Select Plan...</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
-        currentSessionRating = 0; sessionMedia = []; sessionAudios = [];
-        document.getElementById('session-media-prev').innerHTML = "";
-        document.getElementById('session-audio-prev').innerHTML = "";
-        renderStars();
-    }
-
-    async function updateObjectiveDropdown() {
-        const pId = parseInt(document.getElementById('log-plan-link').value);
-        const o = await db.objectives.where('planId').equals(pId).toArray();
-        document.getElementById('log-obj-link').innerHTML = '<option>Select Objective...</option>' + o.map(x => `<option value="${x.id}">${x.title}</option>`).join('');
-    }
-
-    async function loadExercises() {
-        const oId = parseInt(document.getElementById('log-obj-link').value);
-        const logs = await db.logs.where('objId').equals(oId).toArray();
-        const unique = [...new Set(logs.map(l => l.exercise).filter(Boolean))];
-        document.getElementById('log-ex-list').innerHTML = unique.map(ex => `<option value="${ex}">${ex}</option>`).join('');
-    }
-
-    function addExerciseOnFly() {
-        const name = prompt("Exercise Name:"); if(name) { const sel = document.getElementById('log-ex-list'); sel.add(new Option(name, name, true, true)); }
-    }
-
-    async function addPlan() { await db.plans.add({name: document.getElementById('new-plan-input').value}); renderPlans(); }
-    async function addObj(pId) { await db.objectives.add({planId: pId, title: document.getElementById(`no-${pId}`).value, rating: 0}); renderPlans(); }
-    async function editPlan(id,n) { const nn=prompt("Edit:",n); if(nn){await db.plans.update(id,{name:nn});renderPlans();}}
-    async function editObj(id,t) { const nt=prompt("Edit:",t); if(nt){await db.objectives.update(id,{title:nt});renderPlans();}}
+    async function resetSystem() { if(confirm("Wipe all data? Irreversible.") && confirm("Are you sure?")) { await db.delete(); location.reload(); } }
+    async function updateMasteryRating(e, id, val) { e.stopPropagation(); await db.objectives.update(id, { rating: val }); renderPlans(); }
+    async function addPlan() { const n = document.getElementById('new-plan-input').value; if(n) { await db.plans.add({name: n}); document.getElementById('new-plan-input').value = ""; renderPlans(); } }
+    async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; if(t) { await db.objectives.add({planId: pId, title: t, rating: 0}); renderPlans(); } }
+    async function deletePlan(id) { if(confirm("Delete Plan and all its Objectives?")) { await db.plans.delete(id); await db.objectives.where('planId').equals(id).delete(); renderPlans(); } }
+    async function deleteObj(id) { if(confirm("Delete this Objective?")) { await db.objectives.delete(id); renderPlans(); } }
+    async function deleteLog(id) { if(confirm("Delete this log?")) { await db.logs.delete(id); renderHistory(); } }
+    async function editPlan(id,n) { const nn=prompt("Edit Plan Name:",n); if(nn){await db.plans.update(id,{name:nn});renderPlans();}}
+    async function editObj(id,t) { const nt=prompt("Edit Objective Title:",t); if(nt){await db.objectives.update(id,{title:nt});renderPlans();}}
     async function updCri(id,v) { await db.objectives.update(id, {criteria:v}); }
     function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
     function renderStars() { document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="currentSessionRating=${v};renderStars()" class="${v <= currentSessionRating ? 'filled' : ''}">★</span>`).join(''); }
