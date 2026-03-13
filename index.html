@@ -33,7 +33,6 @@
         .btn-rec { background: var(--danger); color: white; padding: 10px; border-radius: 6px; border: none; width: 100%; margin: 5px 0; font-weight: bold; cursor: pointer; }
         .edit-btn { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 1rem; }
         .del-icon { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; opacity: 0.6; }
-        .del-icon:hover { opacity: 1; }
         .stars { font-size: 1.6rem; color: #ccc; cursor: pointer; display: flex; gap: 5px; }
         .stars .filled { color: var(--gold); }
         .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0; }
@@ -63,7 +62,6 @@
         </div>
         <div class="card"><label>Mastery Overview</label><div id="dash-mastery-list"></div></div>
         <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
-        
         <details style="margin-top: 30px; opacity: 0.7;">
             <summary style="font-size: 0.7rem; color: #666; cursor: pointer; text-align: center;">System Settings</summary>
             <div class="card" style="margin-top: 10px; border: 1px solid #ddd;">
@@ -152,7 +150,6 @@
         const objectives = await db.objectives.toArray();
         const last7 = logs.filter(l => (new Date() - new Date(l.date)) / 86400000 <= 7).length;
         document.getElementById('rep-volume').innerHTML = `Last 7 Days: <b>${last7} Sessions</b>`;
-        
         let chartHtml = "";
         for (let p of plans) {
             const pObjs = objectives.filter(o => o.planId === p.id);
@@ -175,33 +172,18 @@
         for(let p of plans) {
             const objs = await db.objectives.where('planId').equals(p.id).toArray();
             html += `<div class="plan-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span onclick="toggle('p-${p.id}')">${p.name}</span>
-                    <button class="edit-btn" onclick="editPlan(${p.id},'${p.name}')">✎</button>
-                </div>
+                <div style="display:flex; align-items:center; gap:10px;"><span onclick="toggle('p-${p.id}')">${p.name}</span>
+                <button class="edit-btn" onclick="editPlan(${p.id},'${p.name}')">✎</button></div>
                 <button class="del-icon" onclick="deletePlan(${p.id})">🗑️</button>
             </div>
             <div id="p-${p.id}" style="display:none; padding-left:10px; border-left:3px solid var(--navy); margin-bottom:20px;">
                 ${objs.map(o => `<div class="obj-card">
-                    <div class="obj-summary">
-                        <span onclick="toggle('o-${o.id}')" style="font-weight:bold;">${o.title}</span>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <div class="stars" style="font-size:1rem;">
-                                ${[1,2,3,4,5].map(v => `<span onclick="updateMasteryRating(event, ${o.id}, ${v})" class="${v <= (o.rating || 0) ? 'filled' : ''}">★</span>`).join('')}
-                            </div>
-                            <button class="edit-btn" onclick="editObj(${o.id},'${o.title}')">✎</button>
-                            <button class="del-icon" style="font-size:0.8rem;" onclick="deleteObj(${o.id})">🗑️</button>
-                        </div>
-                    </div>
-                    <div id="o-${o.id}" class="obj-details" style="display:none;">
-                        <label>Criteria</label>
-                        <textarea onchange="updCri(${o.id}, this.value)">${o.criteria || ''}</textarea>
-                    </div>
-                </div>`).join('')}
-                <div style="padding:10px 0;">
-                    <input type="text" id="no-${p.id}" placeholder="Objective Name">
-                    <button class="btn-main" onclick="addObj(${p.id})">Add Objective</button>
-                </div>
+                    <div class="obj-summary"><span onclick="toggle('o-${o.id}')" style="font-weight:bold;">${o.title}</span>
+                    <div style="display:flex; align-items:center; gap:10px;"><div class="stars" style="font-size:1rem;">
+                    ${[1,2,3,4,5].map(v => `<span onclick="updateMasteryRating(event, ${o.id}, ${v})" class="${v <= (o.rating || 0) ? 'filled' : ''}">★</span>`).join('')}
+                    </div><button class="edit-btn" onclick="editObj(${o.id},'${o.title}')">✎</button><button class="del-icon" onclick="deleteObj(${o.id})">🗑️</button></div></div>
+                    <div id="o-${o.id}" class="obj-details" style="display:none;"><label>Criteria</label><textarea onchange="updCri(${o.id}, this.value)">${o.criteria || ''}</textarea></div></div>`).join('')}
+                <div style="padding:10px 0;"><input type="text" id="no-${p.id}" placeholder="Objective Name"><button class="btn-main" onclick="addObj(${p.id})">Add Objective</button></div>
             </div>`;
         }
         document.getElementById('plans-container').innerHTML = html;
@@ -287,40 +269,68 @@
             html += `<div class="card"><div class="hist-summary" onclick="toggle('h-${l.id}')">
                 <div style="font-size:0.8rem;"><b>${l.date}</b> | ${p?.name || 'Deleted'} > ${o?.title || 'Deleted'} <br><i>${l.exercise || ''}</i></div>
                 <div style="color:var(--gold);">${'★'.repeat(l.rating)}</div></div>
-                <div id="h-${l.id}" class="hist-details">
-                    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-                        <button onclick="deleteLog(${l.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.75rem; font-weight:bold;">🗑️ DELETE LOG</button>
-                    </div>
-                    <p style="white-space: pre-wrap; margin-top:0;">${l.summary || ''}</p>
-                    <div class="media-row">${(l.media||[]).map(m => m.type === 'video' ? `<video src="${m.data}" controls></video>` : `<img src="${m.data}">`).join('')}</div>
-                    ${(l.audios||[]).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('')}
-                </div></div>`;
+                <div id="h-${l.id}" class="hist-details"><div style="display:flex; justify-content:flex-end;"><button onclick="deleteLog(${l.id})" class="del-icon">🗑️ DELETE</button></div>
+                <p style="white-space: pre-wrap;">${l.summary || ''}</p>
+                <div class="media-row">${(l.media||[]).map(m => m.type === 'video' ? `<video src="${m.data}" controls></video>` : `<img src="${m.data}">`).join('')}</div>
+                ${(l.audios||[]).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('')}</div></div>`;
         }
         document.getElementById('history-list').innerHTML = html;
     }
 
     async function exportData() {
-        const plans = await db.plans.toArray(); const objectives = await db.objectives.toArray(); const logs = await db.logs.toArray();
-        const dataStr = JSON.stringify({ plans, objectives, logs }, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a"); link.href = url; link.download = `thorne_pro_backup_${new Date().toISOString().slice(0,10)}.json`; link.click();
+        const p = await db.plans.toArray(); const o = await db.objectives.toArray(); const l = await db.logs.toArray();
+        const blob = new Blob([JSON.stringify({p,o,l},null,2)], {type:"application/json"});
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download=`thorne_backup.json`; a.click();
     }
 
-    async function resetSystem() { if(confirm("Wipe all data? Irreversible.") && confirm("Are you sure?")) { await db.delete(); location.reload(); } }
-    async function updateMasteryRating(e, id, val) { e.stopPropagation(); await db.objectives.update(id, { rating: val }); renderPlans(); }
-    async function addPlan() { const n = document.getElementById('new-plan-input').value; if(n) { await db.plans.add({name: n}); document.getElementById('new-plan-input').value = ""; renderPlans(); } }
-    async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; if(t) { await db.objectives.add({planId: pId, title: t, rating: 0}); renderPlans(); } }
-    async function deletePlan(id) { if(confirm("Delete Plan and all its Objectives?")) { await db.plans.delete(id); await db.objectives.where('planId').equals(id).delete(); renderPlans(); } }
-    async function deleteObj(id) { if(confirm("Delete this Objective?")) { await db.objectives.delete(id); renderPlans(); } }
-    async function deleteLog(id) { if(confirm("Delete this log?")) { await db.logs.delete(id); renderHistory(); } }
-    async function editPlan(id,n) { const nn=prompt("Edit Plan Name:",n); if(nn){await db.plans.update(id,{name:nn});renderPlans();}}
-    async function editObj(id,t) { const nt=prompt("Edit Objective Title:",t); if(nt){await db.objectives.update(id,{title:nt});renderPlans();}}
+    async function resetSystem() { if(confirm("Wipe all?")) { await db.delete(); location.reload(); } }
+    async function updateMasteryRating(e,id,v) { e.stopPropagation(); await db.objectives.update(id,{rating:v}); renderPlans(); }
+    async function addPlan() { const n=document.getElementById('new-plan-input').value; if(n){await db.plans.add({name:n});renderPlans();}}
+    async function addObj(pId) { const t=document.getElementById(`no-${pId}`).value; if(t){await db.objectives.add({planId:pId,title:t,rating:0});renderPlans();}}
+    async function deletePlan(id) { if(confirm("Delete Plan?")) { await db.plans.delete(id); await db.objectives.where('planId').equals(id).delete(); renderPlans(); } }
+    async function deleteObj(id) { if(confirm("Delete Obj?")) { await db.objectives.delete(id); renderPlans(); } }
+    async function deleteLog(id) { if(confirm("Delete Log?")) { await db.logs.delete(id); renderHistory(); } }
+    async function editPlan(id,n) { const nn=prompt("Edit:",n); if(nn){await db.plans.update(id,{name:nn});renderPlans();}}
+    async function editObj(id,t) { const nt=prompt("Edit:",t); if(nt){await db.objectives.update(id,{title:nt});renderPlans();}}
     async function updCri(id,v) { await db.objectives.update(id, {criteria:v}); }
     function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
     function renderStars() { document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="currentSessionRating=${v};renderStars()" class="${v <= currentSessionRating ? 'filled' : ''}">★</span>`).join(''); }
 
+    // DATA SEEDING FUNCTION
+    async function initFoundations() {
+    let plan = await db.plans.where('name').equals('Foundations').first();
+    if(!plan) {
+        const id = await db.plans.add({name: 'Foundations'});
+        plan = {id: id};
+    }
+    
+    // EDIT THIS LIST: Title followed by the Criteria
+    const list = [
+        { title: "Position Changes", criteria: "Tucked movements: Butt back for Down, forward for Sit." },
+        { title: "Engagement & Motivation", criteria: "Push for intensity. 'Jump out of the box' maneuvers." },
+        { title: "Heeling & Footwork", criteria: "Fancy feet. Shuffles, 10 steps. Leash pops for focus." },
+        { title: "The About-Turn", criteria: "Right leg forward, pull Thorne right, body left." },
+        { title: "Stay Command", criteria: "Release with right foot. Build duration, varied orientation." },
+        { title: "Calmness & Regulation", criteria: "The 'Chill' after work. Correct vocalizing." },
+        { title: "Ball Work", criteria: "Two balls. Focus on 'Leave' to get the focus reward." },
+    ];
+
+    
+    for(let item of list) {
+        const existing = await db.objectives.where({planId: plan.id, title: item.title}).first();
+        if(!existing) {
+            // If it doesn't exist, create it with the criteria
+            await db.objectives.add({planId: plan.id, title: item.title, rating: 0, criteria: item.criteria});
+        } else {
+            // If it DOES exist, update the criteria to match what's in GitHub
+            await db.objectives.update(existing.id, {criteria: item.criteria});
+        }
+    }
+    renderPlans();
+}
+
     showPage('dash');
+    initFoundations(); // Runs every time to check for missing foundations
 </script>
 </body>
 </html>
