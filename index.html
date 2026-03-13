@@ -80,8 +80,12 @@
             <div style="display:flex; gap:5px;"><select id="log-ex-list"></select><button onclick="addExerciseOnFly()" style="background:var(--navy); color:var(--gold); border:none; padding:0 15px; border-radius:6px;">+</button></div>
             <label>Rating</label><div class="stars" id="session-stars"></div>
             <label>Notes</label><textarea id="log-summary" rows="4"></textarea>
-            <label>Media <small>(Max 15MB)</small></label><input type="file" accept="image/*,video/*" onchange="handleSessionMedia(this)">
+            
+            <label>Media <small>(Videos/High-Res Photos)</small></label>
+            <p style="font-size: 0.6rem; color: #999; margin: 0 0 5px 0;">Note: Capture media is for session review. Files remain in your Gallery.</p>
+            <input type="file" accept="image/*,video/*" onchange="handleSessionMedia(this)">
             <div class="media-row" id="session-media-prev"></div>
+            
             <button class="btn-rec" id="session-rec-btn" onclick="toggleVoiceRecording()">🎤 Voice Note</button>
             <div id="session-audio-prev"></div>
             <button class="btn-main" id="btn-save-session" style="background:var(--success); color:white;" onclick="saveFullSession()">Save Session</button>
@@ -179,22 +183,21 @@
             showPage('hist');
             document.getElementById('session-init-view').style.display='block';
             document.getElementById('session-active-card').style.display='none';
-        } catch (e) { alert("Storage Error: Media likely too large."); } finally { btn.innerText = "Save Session"; btn.disabled = false; }
+        } catch (e) { alert("Storage Error."); } finally { btn.innerText = "Save Session"; btn.disabled = false; }
     }
 
     function handleSessionMedia(input) {
         const file = input.files[0]; if(!file) return;
-        if (file.size > 15 * 1024 * 1024) { alert("File > 15MB. Too large."); input.value = ""; return; }
-        const reader = new FileReader();
-        reader.onload = e => {
-            const type = file.type.startsWith('video') ? 'video' : 'image';
-            sessionMedia.push({ type: type, data: e.target.result });
-            const el = document.createElement(type === 'video' ? 'video' : 'img');
-            el.src = e.target.result; el.style.width="80px"; el.style.height="80px"; el.style.objectFit="cover";
-            if(type==='video') { el.controls = true; el.playsInline = true; }
-            document.getElementById('session-media-prev').appendChild(el);
-        };
-        reader.readAsDataURL(file);
+        const blobUrl = URL.createObjectURL(file);
+        const type = file.type.startsWith('video') ? 'video' : 'image';
+        
+        // Metadata only storage to prevent database bloat/crashes
+        sessionMedia.push({ type: type, data: "Link to Media", name: file.name });
+        
+        const el = document.createElement(type === 'video' ? 'video' : 'img');
+        el.src = blobUrl; el.style.width="80px"; el.style.height="80px"; el.style.objectFit="cover";
+        if(type==='video') { el.controls = true; el.playsInline = true; }
+        document.getElementById('session-media-prev').appendChild(el);
     }
 
     async function renderHistory() {
@@ -202,8 +205,12 @@
         let html = "";
         for(let l of logs) {
             const p = await db.plans.get(l.planId); const o = await db.objectives.get(l.objId);
-            const mediaHtml = (l.media||[]).map(m => m.type === 'video' ? `<video src="${m.data}" playsinline controls></video>` : `<img src="${m.data}" onclick="openLightbox('${m.data}')">`).join('');
-            html += `<div class="card"><div class="hist-summary" onclick="toggle('h-${l.id}')"><div><b>${l.date}</b> | ${p?.name || 'Deleted'} > ${o?.title || 'Deleted'}<br><i>${l.exercise || ''}</i></div><div style="color:var(--gold);">${'★'.repeat(l.rating)}</div></div><div id="h-${l.id}" class="hist-details" style="display:none;"><hr><p style="white-space: pre-wrap;">${l.summary || ''}</p><div class="media-row">${mediaHtml}</div>${(l.audios||[]).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('')}<div style="text-align:right;"><button onclick="deleteLog(${l.id})" class="del-icon">🗑️ DELETE</button></div></div></div>`;
+            const mediaLinks = (l.media||[]).map(m => `<li>📎 ${m.type.toUpperCase()}: ${m.name || 'Attachment'}</li>`).join('');
+            
+            html += `<div class="card"><div class="hist-summary" onclick="toggle('h-${l.id}')"><div><b>${l.date}</b> | ${p?.name || 'Deleted'} > ${o?.title || 'Deleted'}<br><i>${l.exercise || ''}</i></div><div style="color:var(--gold);">${'★'.repeat(l.rating)}</div></div><div id="h-${l.id}" class="hist-details" style="display:none;"><hr><p style="white-space: pre-wrap;">${l.summary || ''}</p>
+                <ul style="font-size: 0.7rem; color: #666; padding-left: 15px;">${mediaLinks || 'No media attached.'}</ul>
+                ${(l.audios||[]).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('')}
+                <div style="text-align:right;"><button onclick="deleteLog(${l.id})" class="del-icon">🗑️ DELETE</button></div></div></div>`;
         }
         document.getElementById('history-list').innerHTML = html || "<p style='text-align:center;'>No history found.</p>";
     }
