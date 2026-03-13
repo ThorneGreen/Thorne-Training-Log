@@ -142,7 +142,6 @@
         if(id === 'rep') renderReports();
     }
 
-    // --- SYSTEM RESET ---
     async function resetSystemData() {
         if(confirm("Are you sure? This will PERMANENTLY delete all Sessions, Plans, and Objectives.") && 
            confirm("FINAL WARNING: Do you have a backup? Click OK to wipe everything.")) {
@@ -154,7 +153,6 @@
         }
     }
 
-    // --- DASHBOARD ---
     async function renderDashboard() {
         const logs = await db.logs.toArray();
         const plans = await db.plans.toArray();
@@ -170,7 +168,6 @@
             </div>`;
     }
 
-    // --- REPORTING ---
     async function renderReports() {
         const logs = await db.logs.toArray();
         const plans = await db.plans.toArray();
@@ -178,7 +175,7 @@
         const last7 = logs.filter(l => (new Date() - new Date(l.date)) / (1000*60*60*24) <= 7).length;
         document.getElementById('rep-volume').innerHTML = `
             Sessions (Last 7 Days): <b>${last7}</b><br>
-            Avg Session Quality: <b>${(logs.reduce((a,b)=>a+b.rating,0)/logs.length || 0).toFixed(1)} / 5 ★</b>`;
+            Avg Session Quality: <b>${(logs.reduce((a,b)=>a+(b.rating||0),0)/logs.length || 0).toFixed(1)} / 5 ★</b>`;
 
         let chartHtml = "";
         for(let p of plans) {
@@ -193,7 +190,6 @@
         document.getElementById('rep-visual-chart').innerHTML = chartHtml || "No objectives recorded yet.";
     }
 
-    // --- VOICE RECORDER ---
     async function toggleVoiceRecording() {
         const btn = document.getElementById('session-rec-btn');
         if (!recorder) {
@@ -214,26 +210,33 @@
     }
     function renderAudioPreviews() { document.getElementById('session-audio-prev').innerHTML = sessionAudios.map(src => `<audio src="${src}" controls style="width:100%; height:35px; margin-top:5px;"></audio>`).join(''); }
 
-    // --- SESSION LOGIC ---
     function startNewSession() {
         document.getElementById('session-init-view').style.display='none';
         document.getElementById('session-active-card').style.display='block';
         document.getElementById('log-date').valueAsDate = new Date();
         currentSessionRating = 0; sessionMedia = []; sessionAudios = [];
         document.getElementById('session-audio-prev').innerHTML = '';
+        document.getElementById('session-media-prev').innerHTML = '';
         renderSessionStars(); updatePlanDropdown();
     }
+
     async function saveFullSession() {
         const pId = parseInt(document.getElementById('log-plan-link').value);
         const oId = parseInt(document.getElementById('log-obj-link').value);
         if(!pId || !oId) return alert("Select Plan and Objective.");
-        await db.logs.add({ date: document.getElementById('log-date').value, planId: pId, objId: oId, rating: currentSessionRating, summary: document.getElementById('log-summary').value, media: sessionMedia, audios: sessionAudios });
+        await db.logs.add({ 
+            date: document.getElementById('log-date').value, 
+            planId: pId, objId: oId, 
+            rating: currentSessionRating, 
+            summary: document.getElementById('log-summary').value, 
+            media: sessionMedia, 
+            audios: sessionAudios 
+        });
         document.getElementById('session-init-view').style.display='block';
         document.getElementById('session-active-card').style.display='none';
         showPage('hist');
     }
 
-    // --- HISTORY RENDERING ---
     async function renderHistory() {
         const logs = await db.logs.orderBy('date').reverse().toArray();
         const container = document.getElementById('history-list');
@@ -249,7 +252,7 @@
                 </div>
                 <div id="h-${l.id}" class="hist-details">
                     <div class="preserve-format">${l.summary}</div>
-                    <div class="media-row">${(l.media||[]).map(m=>`<img src="${m.data}">`).join('')}</div>
+                    <div class="media-row">${(l.media||[]).map(m=> m.type === 'video' ? `<video src="${m.data}" controls></video>` : `<img src="${m.data}">`).join('')}</div>
                     ${(l.audios||[]).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('')}
                     <button style="color:red; background:none; border:none; margin-top:15px; cursor:pointer; font-size:0.7rem;" onclick="delHist(${l.id})">Delete Session</button>
                 </div>`;
@@ -257,7 +260,6 @@
         }
     }
 
-    // --- PLANS & UTILS ---
     async function renderPlans() {
         const plans = await db.plans.toArray();
         const container = document.getElementById('plans-container');
@@ -274,6 +276,7 @@
             container.appendChild(div);
         }
     }
+
     async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option value="">Select Plan...</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
     async function updateObjectiveDropdown() { const planId = parseInt(document.getElementById('log-plan-link').value); if(!planId) return; const o = await db.objectives.where('planId').equals(planId).toArray(); document.getElementById('log-obj-link').innerHTML = o.map(x => `<option value="${x.id}">${x.title}</option>`).join(''); }
     function renderSessionStars() { document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="setSessionRating(${v})" class="${v <= currentSessionRating ? 'filled' : ''}">${v <= currentSessionRating ? '★' : '☆'}</span>`).join(''); }
@@ -284,7 +287,18 @@
     async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; if(t) { await db.objectives.add({ planId: pId, title: t, rating: 0 }); renderPlans(); } }
     function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
     async function delHist(id) { if(confirm("Delete?")) { await db.logs.delete(id); renderHistory(); } }
-    async function handleSessionMedia(input) { const file = input.files[0]; const reader = new FileReader(); reader.onload = (e) => { sessionMedia.push({ data: e.target.result }); document.getElementById('session-media-prev').innerHTML = sessionMedia.map(m => `<img src="${m.data}">`).join(''); }; reader.readAsDataURL(file); }
+    
+    async function handleSessionMedia(input) { 
+        const file = input.files[0]; if(!file) return;
+        const reader = new FileReader(); 
+        reader.onload = (e) => { 
+            const type = file.type.startsWith('video') ? 'video' : 'image';
+            sessionMedia.push({ type, data: e.target.result }); 
+            document.getElementById('session-media-prev').innerHTML = sessionMedia.map(m => m.type === 'video' ? `<video src="${m.data}"></video>` : `<img src="${m.data}">`).join(''); 
+        }; 
+        reader.readAsDataURL(file); 
+    }
+    
     async function downloadBackup() { const all = { plans: await db.plans.toArray(), objectives: await db.objectives.toArray(), logs: await db.logs.toArray() }; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(all)], {type:"application/json"})); a.download = "Thorne_Backup.json"; a.click(); }
 
     renderDashboard();
