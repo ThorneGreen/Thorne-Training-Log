@@ -8,25 +8,40 @@
     <style>
         :root { --navy: #0D1B2A; --gold: #D4AF37; --bg: #F0F2F5; --white: #FFFFFF; --danger: #8B0000; --success: #2D6A4F; }
         body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+        
         .header { background: var(--navy); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
         .header h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        
         nav { display: flex; background: var(--navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.2); overflow-x: auto; }
         nav button { flex: 1; min-width: 70px; padding: 12px 5px; border: none; background: none; color: #E0E1DD; font-weight: bold; font-size: 0.65rem; border-bottom: 3px solid transparent; text-transform: uppercase; }
         nav button.active { border-bottom: 3px solid var(--gold); color: var(--gold); }
+
         .container { max-width: 500px; margin: auto; padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; padding: 15px; }
+
+        /* DASHBOARD STYLES */
+        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 15px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-box small { color: #fff; display: block; font-size: 0.6rem; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-box big { font-size: 1.5rem; font-weight: bold; }
+
         .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-rec { background: var(--danger); color: white; padding: 12px; border-radius: 8px; border: none; width: 100%; margin: 10px 0; font-weight: bold; }
+        .btn-reset { width: 100%; background: #fff; color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        
         .stars { font-size: 1.6rem; color: #ccc; cursor: pointer; display: flex; gap: 5px; }
         .stars .filled { color: var(--gold); }
-        .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; }
-        .media-row img, .media-row video { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gold); flex-shrink: 0; background: #000; }
-        .hist-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .hist-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; display: none; }
+        
+        .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; min-height: 50px; }
+        .media-row img, .media-row video { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gold); flex-shrink: 0; background: #000; }
+        
         label { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin: 12px 0 5px; }
         textarea, input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; }
+        
+        .btn-rec { background: var(--danger); color: white; padding: 12px; border-radius: 8px; border: none; width: 100%; margin: 10px 0; font-weight: bold; }
+        .hist-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .hist-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; display: none; }
     </style>
 </head>
 <body>
@@ -42,8 +57,16 @@
 
 <div class="container">
     <div id="page-dash" class="page active">
-        <div class="card" id="dash-stats">Loading...</div>
-        <button class="btn-main" onclick="showPage('log')">Start Training</button>
+        <div class="stat-grid">
+            <div class="stat-box"><small>Total Sessions</small><big id="stat-total-logs">0</big></div>
+            <div class="stat-box"><small>Active Plans</small><big id="stat-total-plans">0</big></div>
+        </div>
+        <div class="card">
+            <label>Mastery Overview</label>
+            <div id="dash-mastery-list" style="margin-top:10px;"></div>
+        </div>
+        <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
+        <button class="btn-reset" onclick="clearDataOnly()">🧹 CLEAR SESSIONS & RATINGS ONLY</button>
     </div>
 
     <div id="page-log" class="page">
@@ -51,17 +74,17 @@
             <button class="btn-main" onclick="startNewSession()">+ Start New Session</button>
         </div>
         <div id="session-active-card" style="display: none;" class="card">
-            <label>Session Details</label>
+            <label>Details</label>
             <input type="date" id="log-date">
             <select id="log-plan-link" onchange="updateObjectiveDropdown()" style="margin-top:10px;"></select>
             <select id="log-obj-link" style="margin-top:10px;"></select>
             
-            <label>Session Rating</label>
+            <label>Session Rating (Click same star to clear)</label>
             <div class="stars" id="session-stars"></div>
             
             <label>Notes</label><textarea id="log-summary" rows="3"></textarea>
             
-            <label>Add Video/Photo</label>
+            <label>Media (Photos/Videos)</label>
             <input type="file" id="media-input" accept="image/*,video/*" onchange="handleMediaUpload(this)">
             <div class="media-row" id="session-media-prev"></div>
             
@@ -75,7 +98,9 @@
 
     <div id="page-plan" class="page">
         <div id="plans-container"></div>
-        <div class="card"><input type="text" id="new-plan-name" placeholder="Plan Name"><button class="btn-main" onclick="addPlan()">Add Plan</button></div>
+        <details class="card" style="padding:0;"><summary style="padding:15px; font-weight:bold; cursor:pointer;">+ Create New Plan</summary>
+            <div style="padding:15px;"><input type="text" id="new-plan-name" placeholder="Plan Name"><button class="btn-main" onclick="addPlan()">Add Plan</button></div>
+        </details>
     </div>
 
     <div id="page-hist" class="page">
@@ -103,11 +128,35 @@
         if(id === 'hist') renderHistory();
     }
 
-    // --- MEDIA HANDLING (BLOB BASED) ---
+    async function clearDataOnly() {
+        if(confirm("Clear history and ratings? Plans will be saved.")) {
+            await db.logs.clear();
+            await db.objectives.toCollection().modify({ rating: 0 });
+            renderDash();
+        }
+    }
+
+    // --- DASHBOARD RENDER ---
+    async function renderDash() {
+        const logs = await db.logs.toArray();
+        const plans = await db.plans.toArray();
+        const objs = await db.objectives.toArray();
+        document.getElementById('stat-total-logs').innerText = logs.length;
+        document.getElementById('stat-total-plans').innerText = plans.length;
+        
+        const mastery = objs.length > 0 ? objs.filter(o => (o.rating || 0) >= 4).length : 0;
+        const masteryPercent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
+        document.getElementById('dash-mastery-list').innerHTML = `
+            <div style="font-size:0.8rem;">Mastered: <b>${mastery} / ${objs.length}</b></div>
+            <div style="height:8px; background:#ddd; border-radius:4px; margin-top:5px; overflow:hidden;">
+                <div style="width:${masteryPercent}%; height:100%; background:var(--gold);"></div>
+            </div>`;
+    }
+
+    // --- MEDIA HANDLING ---
     function handleMediaUpload(input) {
         const file = input.files[0];
         if(!file) return;
-        // Store the raw file/blob directly for better mobile support
         sessionMedia.push(file); 
         renderMediaPreviews();
     }
@@ -117,14 +166,12 @@
         container.innerHTML = '';
         sessionMedia.forEach(file => {
             const url = URL.createObjectURL(file);
-            const el = file.type.startsWith('video') 
+            container.innerHTML += file.type.startsWith('video') 
                 ? `<video src="${url}" muted playsinline></video>` 
                 : `<img src="${url}">`;
-            container.innerHTML += el;
         });
     }
 
-    // --- VOICE LOGIC ---
     async function toggleVoice() {
         const btn = document.getElementById('rec-btn');
         if (!recorder) {
@@ -149,10 +196,11 @@
         container.innerHTML = sessionAudios.map(blob => `<audio src="${URL.createObjectURL(blob)}" controls style="width:100%; margin-top:5px;"></audio>`).join('');
     }
 
-    // --- SESSION LOGIC ---
+    // --- SESSION FLOW ---
     function startNewSession() {
         document.getElementById('session-init-view').style.display='none';
         document.getElementById('session-active-card').style.display='block';
+        document.getElementById('log-date').valueAsDate = new Date();
         sessionMedia = []; sessionAudios = []; currentRating = 0;
         renderStars(); updatePlanDropdown();
     }
@@ -160,60 +208,37 @@
     async function saveFullSession() {
         const pId = parseInt(document.getElementById('log-plan-link').value);
         const oId = parseInt(document.getElementById('log-obj-link').value);
-        if(!pId || !oId) return alert("Pick a Plan and Objective");
-
+        if(!pId || !oId) return alert("Pick Plan/Objective");
         await db.logs.add({
             date: document.getElementById('log-date').value,
-            planId: pId, objId: oId,
-            rating: currentRating,
+            planId: pId, objId: oId, rating: currentRating,
             summary: document.getElementById('log-summary').value,
-            media: sessionMedia, // Dexie saves Blobs perfectly
-            audios: sessionAudios
+            media: sessionMedia, audios: sessionAudios
         });
         showPage('hist');
         document.getElementById('session-init-view').style.display='block';
         document.getElementById('session-active-card').style.display='none';
     }
 
-    // --- HISTORY RENDERING ---
     async function renderHistory() {
         const logs = await db.logs.orderBy('date').reverse().toArray();
-        const container = document.getElementById('history-list');
-        container.innerHTML = '';
+        const container = document.getElementById('history-list'); container.innerHTML = '';
         for(let l of logs) {
-            const plan = await db.plans.get(l.planId);
-            const obj = await db.objectives.get(l.objId);
-            const div = document.createElement('div');
-            div.className = 'card'; div.style.padding = '0';
-            
+            const plan = await db.plans.get(l.planId); const obj = await db.objectives.get(l.objId);
+            const div = document.createElement('div'); div.className = 'card'; div.style.padding = '0';
             const mediaHtml = (l.media || []).map(file => {
                 const url = URL.createObjectURL(file);
-                return file.type.startsWith('video') 
-                    ? `<video src="${url}" controls playsinline style="width:100%; margin-top:10px;"></video>` 
-                    : `<img src="${url}" style="width:100px; height:100px; margin:5px; object-fit:cover;">`;
+                return file.type.startsWith('video') ? `<video src="${url}" controls playsinline style="width:100%; margin-top:10px;"></video>` : `<img src="${url}" style="width:100px; height:100px; margin:5px; object-fit:cover;">`;
             }).join('');
-
             const audioHtml = (l.audios || []).map(blob => `<audio src="${URL.createObjectURL(blob)}" controls style="width:100%; margin-top:10px;"></audio>`).join('');
-
-            div.innerHTML = `
-                <div class="hist-summary" onclick="toggle('h-${l.id}')">
-                    <span><b>${l.date}</b><br>${plan?.name} > ${obj?.title}</span>
-                    <span style="color:var(--gold);">${'★'.repeat(l.rating)}</span>
-                </div>
-                <div id="h-${l.id}" class="hist-details">
-                    <p>${l.summary}</p>
-                    <div style="display:flex; flex-wrap:wrap;">${mediaHtml}</div>
-                    ${audioHtml}
-                    <button style="color:red; border:none; background:none; margin-top:10px;" onclick="delLog(${l.id})">Delete</button>
-                </div>`;
+            div.innerHTML = `<div class="hist-summary" onclick="toggle('h-${l.id}')"><span><b>${l.date}</b><br>${plan?.name} > ${obj?.title}</span><span style="color:var(--gold);">${'★'.repeat(l.rating)}</span></div>
+                <div id="h-${l.id}" class="hist-details"><p>${l.summary}</p><div style="display:flex; flex-wrap:wrap;">${mediaHtml}</div>${audioHtml}<button style="color:red; border:none; background:none; margin-top:10px;" onclick="delLog(${l.id})">Delete</button></div>`;
             container.appendChild(div);
         }
     }
 
     // --- HELPERS ---
-    function renderStars() {
-        document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="setRate(${v})" class="${v <= currentRating ? 'filled' : ''}">${v <= currentRating ? '★' : '☆'}</span>`).join('');
-    }
+    function renderStars() { document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="setRate(${v})" class="${v <= currentRating ? 'filled' : ''}">${v <= currentRating ? '★' : '☆'}</span>`).join(''); }
     function setRate(v) { currentRating = (currentRating === v) ? 0 : v; renderStars(); }
     function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display==='block' ? 'none' : 'block'; }
     async function delLog(id) { if(confirm("Delete?")) { await db.logs.delete(id); renderHistory(); } }
@@ -225,13 +250,12 @@
         const container = document.getElementById('plans-container'); container.innerHTML = '';
         for(let p of plans) {
             const objs = await db.objectives.where('planId').equals(p.id).toArray();
-            container.innerHTML += `<div class="card"><b>${p.name}</b><hr>${objs.map(o => `<div>${o.title}</div>`).join('')}<input id="no-${p.id}"><button onclick="addObj(${p.id})">Add Objective</button></div>`;
+            container.innerHTML += `<div class="card"><b>${p.name}</b><hr>${objs.map(o => `<div>${o.title}</div>`).join('')}<input id="no-${p.id}"><button class="btn-main" onclick="addObj(${p.id})">Add Objective</button></div>`;
         }
     }
     async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; await db.objectives.add({planId: pId, title: t, rating: 0}); renderPlans(); }
-    async function renderDash() { const logs = await db.logs.toArray(); document.getElementById('dash-stats').innerHTML = `Total Sessions: ${logs.length}`; }
 
-    showPage('dash');
+    renderDash();
 </script>
 </body>
 </html>
