@@ -3,51 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>THORNE PRO - Master Suite</title>
+    <title>THORNE Training Tracker</title>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <style>
         :root { --navy: #0D1B2A; --gold: #D4AF37; --bg: #F0F2F5; --white: #FFFFFF; --danger: #8B0000; --success: #2D6A4F; }
         body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+        
         .header { background: var(--navy); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
         .header h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        
         nav { display: flex; background: var(--navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.2); overflow-x: auto; }
         nav button { flex: 1; min-width: 70px; padding: 12px 5px; border: none; background: none; color: #E0E1DD; font-weight: bold; font-size: 0.65rem; border-bottom: 3px solid transparent; text-transform: uppercase; }
         nav button.active { border-bottom: 3px solid var(--gold); color: var(--gold); }
+
         .container { max-width: 500px; margin: auto; padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
+
         .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 15px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-box { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; text-align: center; }
         .stat-box small { color: #fff; display: block; font-size: 0.6rem; text-transform: uppercase; margin-bottom: 5px; }
         .stat-box big { font-size: 1.5rem; font-weight: bold; }
-        .mastery-row { margin-bottom: 15px; }
-        .mastery-label { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; color: var(--navy); }
+
+        .chart-container { margin-top: 15px; }
+        .bar-row { margin-bottom: 12px; }
+        .bar-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between; }
         .bar-bg { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--gold); transition: width 0.8s ease-in-out; }
+        .bar-fill { height: 100%; background: var(--gold); transition: width 0.5s ease; }
+
+        .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-reset { width: 100%; background: #fff; color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .btn-sub { background: #eee; color: #444; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.7rem; cursor: pointer; margin-top: 5px; width: 100%; }
+        
         .plan-header { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; align-items: center; }
         .obj-card { background: var(--white); border-radius: 6px; margin: 8px 0; border: 1px solid #eee; overflow: hidden; }
         .obj-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; background: #fff; align-items: center; }
         .obj-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; }
+
         label { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin: 12px 0 5px; }
         textarea, input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem; }
-        .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-rec { background: var(--danger); color: white; padding: 10px; border-radius: 6px; border: none; width: 100%; margin: 5px 0; font-weight: bold; cursor: pointer; }
-        .edit-btn { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 1rem; }
-        .del-icon { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.8rem; opacity: 0.6; font-weight: bold; }
+        
         .stars { font-size: 1.6rem; color: #ccc; cursor: pointer; display: flex; gap: 5px; }
         .stars .filled { color: var(--gold); }
-        .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0; }
-        .media-row img, .media-row video { width: 85px; height: 85px; object-fit: cover; border-radius: 4px; background: #000; flex-shrink: 0; cursor: pointer; }
+        .btn-rec { background: var(--danger); color: white; padding: 10px; border-radius: 6px; border: none; width: 100%; margin: 5px 0; font-weight: bold; cursor: pointer; }
+        .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; min-height: 50px; }
+        .media-row img { width: 85px; height: 85px; object-fit: cover; border-radius: 4px; background: #000; flex-shrink: 0; border: 1px solid var(--gold); }
         .hist-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .hist-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; display: none; }
-        #lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; }
-        #lightbox img { max-width: 95%; max-height: 95%; border: 2px solid var(--gold); }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>THORNE PRO</h1></div>
+<div class="header"><h1>THORNE Master Suite</h1></div>
 
 <nav>
     <button id="nav-dash" class="active" onclick="showPage('dash')">Dash</button>
@@ -63,8 +71,12 @@
             <div class="stat-box"><small>Total Sessions</small><big id="stat-total-logs">0</big></div>
             <div class="stat-box"><small>Active Plans</small><big id="stat-total-plans">0</big></div>
         </div>
-        <div class="card"><label>Mastery Overview</label><div id="dash-mastery-list"></div></div>
+        <div class="card">
+            <label>Mastery Overview</label>
+            <div id="dash-mastery-list" style="margin-top:10px;"></div>
+        </div>
         <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
+        <button class="btn-reset" onclick="resetSystemData()">⚠️ RESET SYSTEM DATA</button>
     </div>
 
     <div id="page-log" class="page">
@@ -75,43 +87,49 @@
             <label>Details</label>
             <input type="date" id="log-date">
             <select id="log-plan-link" onchange="updateObjectiveDropdown()" style="margin-top:10px;"></select>
-            <select id="log-obj-link" onchange="loadExercises()" style="margin-top:10px;"></select>
-            <label>Exercise</label>
-            <div style="display:flex; gap:5px;"><select id="log-ex-list"></select><button onclick="addExerciseOnFly()" style="background:var(--navy); color:var(--gold); border:none; padding:0 15px; border-radius:6px;">+</button></div>
+            <select id="log-obj-link" style="margin-top:10px;"></select>
             <label>Rating</label><div class="stars" id="session-stars"></div>
             <label>Notes</label><textarea id="log-summary" rows="4"></textarea>
             
-            <label>Media <small>(Videos/High-Res Photos)</small></label>
-            <p style="font-size: 0.6rem; color: #999; margin: 0 0 5px 0;">Note: Capture media is for session review. Files remain in your Gallery.</p>
-            <input type="file" accept="image/*,video/*" onchange="handleSessionMedia(this)">
+            <label>Media (Gallery)</label>
+            <input type="file" id="media-input" accept="image/*,video/*" onchange="handleSessionMedia(this)">
             <div class="media-row" id="session-media-prev"></div>
+            <button id="btn-clear-media" class="btn-sub" onclick="clearMediaQueue()" style="display:none;">Clear Selected Media</button>
             
             <button class="btn-rec" id="session-rec-btn" onclick="toggleVoiceRecording()">🎤 Voice Note</button>
             <div id="session-audio-prev"></div>
-            <button class="btn-main" id="btn-save-session" style="background:var(--success); color:white;" onclick="saveFullSession()">Save Session</button>
+            
+            <button class="btn-main" style="background:var(--success); color:white;" onclick="saveFullSession()">Save Session</button>
         </div>
     </div>
 
-    <div id="page-plan" class="page"><div id="plans-container"></div><details class="card" style="padding:0;"><summary style="padding:15px;">+ Create New Plan</summary><div style="padding:15px; border-top:1px solid #eee;"><label>Plan Name</label><input type="text" id="new-plan-input"><button class="btn-main" onclick="addPlan()">Add Plan</button></div></details></div>
+    <div id="page-plan" class="page">
+        <div id="plans-container"></div>
+        <details class="card" style="padding:0;"><summary style="padding:15px; font-weight:bold; cursor:pointer;">+ Create New Plan</summary>
+            <div style="padding:15px;"><input type="text" id="new-plan-input" placeholder="Plan Name"><button class="btn-main" onclick="addPlan()">Add Plan</button></div>
+        </details>
+    </div>
 
-    <div id="page-hist" class="page"><div id="history-list"></div></div>
+    <div id="page-hist" class="page">
+        <button class="btn-main" style="background:#444; margin-bottom:15px;" onclick="downloadBackup()">Download Backup</button>
+        <div id="history-list"></div>
+    </div>
 
     <div id="page-rep" class="page">
-        <div class="card"><label>Weekly Performance</label><div id="rep-volume" style="font-size: 1.2rem; font-weight: bold; color: var(--navy); margin-top: 5px;"></div></div>
-        <div id="rep-visual-chart"></div>
+        <div class="card"><label>Weekly Volume</label><div id="rep-volume" style="font-size:0.9rem; margin-top:10px;"></div></div>
+        <div class="card"><label>Objective Mastery Chart</label><div id="rep-visual-chart" class="chart-container"></div></div>
     </div>
 </div>
 
-<div id="lightbox" onclick="this.style.display='none'"><img id="lightbox-img" src=""></div>
-
 <script>
-    const db = new Dexie("ThorneCoreDB");
+    let db = new Dexie("ThorneCoreDB");
     db.version(1).stores({ plans: '++id, name', objectives: '++id, planId, title, rating', logs: '++id, date, planId, objId' });
 
     let currentSessionRating = 0, sessionMedia = [], sessionAudios = [], recorder, chunks = [];
 
     async function showPage(id) {
-        document.querySelectorAll('.page, nav button').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById('page-' + id).classList.add('active');
         document.getElementById('nav-' + id).classList.add('active');
         if(id === 'dash') renderDashboard();
@@ -120,165 +138,148 @@
         if(id === 'rep') renderReports();
     }
 
+    async function resetSystemData() {
+        if(confirm("DANGER: This will delete everything. Proceed?") && confirm("Are you absolutely sure?")) {
+            await db.delete();
+            db = new Dexie("ThorneCoreDB");
+            db.version(1).stores({ plans: '++id, name', objectives: '++id, planId, title, rating', logs: '++id, date, planId, objId' });
+            await db.open();
+            window.location.reload();
+        }
+    }
+
     async function renderDashboard() {
         const logs = await db.logs.toArray();
         const plans = await db.plans.toArray();
         const objs = await db.objectives.toArray();
         document.getElementById('stat-total-logs').innerText = logs.length;
         document.getElementById('stat-total-plans').innerText = plans.length;
-        let html = "";
-        for (let p of plans) {
-            const pObjs = objs.filter(o => o.planId === p.id);
-            const mastered = pObjs.filter(o => (o.rating || 0) >= 4).length;
-            const pct = pObjs.length > 0 ? Math.round((mastered / pObjs.length) * 100) : 0;
-            html += `<div class="mastery-row"><div class="mastery-label"><span>${p.name}</span><span>${pct}% (${mastered}/${pObjs.length})</span></div><div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
-        }
-        document.getElementById('dash-mastery-list').innerHTML = html || "<p style='font-size:0.8rem; color:#666;'>No active plans.</p>";
+        const mastery = objs.length > 0 ? objs.filter(o => (o.rating || 0) >= 4).length : 0;
+        const masteryPercent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
+        document.getElementById('dash-mastery-list').innerHTML = `<div style="font-size:0.8rem;">Mastered: <b>${mastery} / ${objs.length}</b></div><div style="height:8px; background:#ddd; border-radius:4px; margin-top:5px; overflow:hidden;"><div style="width:${masteryPercent}%; height:100%; background:var(--gold);"></div></div>`;
     }
 
-    async function renderReports() {
-        const logs = await db.logs.toArray();
-        const plans = await db.plans.toArray();
-        const objectives = await db.objectives.toArray();
-        const last7 = logs.filter(l => (new Date() - new Date(l.date)) / 86400000 <= 7).length;
-        document.getElementById('rep-volume').innerText = `${last7} Sessions Last 7 Days`;
-        let chartHtml = "";
-        for (let p of plans) {
-            const pObjs = objectives.filter(o => o.planId === p.id);
-            const avg = pObjs.length > 0 ? (pObjs.reduce((a, b) => a + (b.rating || 0), 0) / pObjs.length).toFixed(1) : 0;
-            chartHtml += `<div class="card" style="padding:0; overflow:hidden; margin-bottom:10px;">
-                <div onclick="toggle('rep-p-${p.id}')" style="padding:15px; background:var(--navy); color:var(--gold); display:flex; justify-content:space-between; cursor:pointer; font-weight:bold;">
-                    <span>${p.name}</span><span>Avg: ${avg}/5 ▾</span>
-                </div>
-                <div id="rep-p-${p.id}" style="display:none; padding:15px;">
-                    ${pObjs.map(o => `<div style="margin-bottom:10px;"><div style="font-size:0.7rem; display:flex; justify-content:space-between;"><span>${o.title}</span><b>${o.rating}/5</b></div>
-                    <div class="bar-bg"><div class="bar-fill" style="width:${((o.rating || 0)/5)*100}%"></div></div></div>`).join('')}
-                </div></div>`;
-        }
-        document.getElementById('rep-visual-chart').innerHTML = chartHtml;
+    // --- MEDIA HANDLING ---
+    async function handleSessionMedia(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            sessionMedia.push({ data: e.target.result, type: file.type });
+            renderMediaPreviews();
+        };
+        reader.readAsDataURL(file);
     }
 
-    async function renderPlans() {
-        const plans = await db.plans.toArray();
-        let html = "";
-        for(let p of plans) {
-            const objs = await db.objectives.where('planId').equals(p.id).toArray();
-            html += `<div class="plan-header"><div style="display:flex; align-items:center; gap:10px;"><span onclick="toggle('p-${p.id}')">${p.name}</span><button class="edit-btn" onclick="editPlan(${p.id},'${p.name}')">✎</button></div><button class="del-icon" onclick="deletePlan(${p.id})" style="color:var(--gold)">🗑️</button></div>
-            <div id="p-${p.id}" style="display:none; padding-left:10px; border-left:3px solid var(--navy); margin-bottom:20px;">
-                ${objs.map(o => `<div class="obj-card"><div class="obj-summary"><span onclick="toggle('o-${o.id}')" style="font-weight:bold;">${o.title}</span><div style="display:flex; align-items:center; gap:10px;"><div class="stars" style="font-size:1rem;">${[1,2,3,4,5].map(v => `<span onclick="updateMasteryRating(event, ${o.id}, ${v})" class="${v <= (o.rating || 0) ? 'filled' : ''}">★</span>`).join('')}</div><button class="edit-btn" onclick="editObj(${o.id},'${o.title}')">✎</button><button class="del-icon" onclick="deleteObj(${o.id})">🗑️</button></div></div><div id="o-${o.id}" class="obj-details" style="display:none;"><label>Criteria</label><textarea onchange="updCri(${o.id}, this.value)">${o.criteria || ''}</textarea></div></div>`).join('')}
-                <div style="padding:10px 0;"><input type="text" id="no-${p.id}" placeholder="Objective Name"><button class="btn-main" onclick="addObj(${p.id})">Add Objective</button></div>
-            </div>`;
-        }
-        document.getElementById('plans-container').innerHTML = html || "<p style='text-align:center;'>Create a plan to begin.</p>";
+    function renderMediaPreviews() {
+        const container = document.getElementById('session-media-prev');
+        const clearBtn = document.getElementById('btn-clear-media');
+        container.innerHTML = sessionMedia.map(m => m.type.startsWith('image') ? `<img src="${m.data}">` : `<div style="width:85px; height:85px; background:#000; color:#fff; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:0.6rem;">VIDEO</div>`).join('');
+        clearBtn.style.display = sessionMedia.length > 0 ? 'block' : 'none';
+    }
+
+    function clearMediaQueue() {
+        sessionMedia = [];
+        document.getElementById('media-input').value = "";
+        renderMediaPreviews();
+    }
+
+    // --- VOICE ---
+    async function toggleVoiceRecording() {
+        const btn = document.getElementById('session-rec-btn');
+        if (!recorder) {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorder = new MediaRecorder(stream); chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const reader = new FileReader();
+                reader.onload = (e) => { sessionAudios.push(e.target.result); renderAudioPreviews(); };
+                reader.readAsDataURL(new Blob(chunks, { type: 'audio/ogg; codecs=opus' }));
+            };
+            recorder.start(); btn.innerText = "🛑 Stop Recording"; btn.style.background = "#000";
+        } else { recorder.stop(); recorder = null; btn.innerText = "🎤 Voice Note"; btn.style.background = "var(--danger)"; }
+    }
+    function renderAudioPreviews() { document.getElementById('session-audio-prev').innerHTML = sessionAudios.map(src => `<audio src="${src}" controls style="width:100%; height:35px; margin-top:5px;"></audio>`).join(''); }
+
+    // --- LOGIC ---
+    function startNewSession() {
+        document.getElementById('session-init-view').style.display='none';
+        document.getElementById('session-active-card').style.display='block';
+        document.getElementById('log-date').valueAsDate = new Date();
+        currentSessionRating = 0; sessionMedia = []; sessionAudios = [];
+        renderMediaPreviews(); document.getElementById('session-audio-prev').innerHTML = '';
+        renderSessionStars(); updatePlanDropdown();
     }
 
     async function saveFullSession() {
         const pId = parseInt(document.getElementById('log-plan-link').value);
         const oId = parseInt(document.getElementById('log-obj-link').value);
-        if(!pId || !oId) { alert("Select Plan and Objective."); return; }
-        const btn = document.getElementById('btn-save-session');
-        btn.innerText = "Saving..."; btn.disabled = true;
-        try {
-            await db.logs.add({ date: document.getElementById('log-date').value, planId: pId, objId: oId, exercise: document.getElementById('log-ex-list').value, rating: currentSessionRating, summary: document.getElementById('log-summary').value, media: sessionMedia, audios: sessionAudios });
-            showPage('hist');
-            document.getElementById('session-init-view').style.display='block';
-            document.getElementById('session-active-card').style.display='none';
-        } catch (e) { alert("Storage Error."); } finally { btn.innerText = "Save Session"; btn.disabled = false; }
-    }
-
-    function handleSessionMedia(input) {
-        const file = input.files[0]; if(!file) return;
-        const blobUrl = URL.createObjectURL(file);
-        const type = file.type.startsWith('video') ? 'video' : 'image';
-        
-        // Metadata only storage to prevent database bloat/crashes
-        sessionMedia.push({ type: type, data: "Link to Media", name: file.name });
-        
-        const el = document.createElement(type === 'video' ? 'video' : 'img');
-        el.src = blobUrl; el.style.width="80px"; el.style.height="80px"; el.style.objectFit="cover";
-        if(type==='video') { el.controls = true; el.playsInline = true; }
-        document.getElementById('session-media-prev').appendChild(el);
+        if(!pId || !oId) return alert("Select Plan/Objective.");
+        await db.logs.add({ date: document.getElementById('log-date').value, planId: pId, objId: oId, rating: currentSessionRating, summary: document.getElementById('log-summary').value, media: sessionMedia, audios: sessionAudios });
+        document.getElementById('session-init-view').style.display='block';
+        document.getElementById('session-active-card').style.display='none';
+        showPage('hist');
     }
 
     async function renderHistory() {
-        const logs = await db.logs.orderBy('id').reverse().toArray();
-        let html = "";
+        const logs = await db.logs.orderBy('date').reverse().toArray();
+        const container = document.getElementById('history-list'); container.innerHTML = '';
         for(let l of logs) {
-            const p = await db.plans.get(l.planId); const o = await db.objectives.get(l.objId);
-            const mediaLinks = (l.media||[]).map(m => `<li>📎 ${m.type.toUpperCase()}: ${m.name || 'Attachment'}</li>`).join('');
-            
-            html += `<div class="card"><div class="hist-summary" onclick="toggle('h-${l.id}')"><div><b>${l.date}</b> | ${p?.name || 'Deleted'} > ${o?.title || 'Deleted'}<br><i>${l.exercise || ''}</i></div><div style="color:var(--gold);">${'★'.repeat(l.rating)}</div></div><div id="h-${l.id}" class="hist-details" style="display:none;"><hr><p style="white-space: pre-wrap;">${l.summary || ''}</p>
-                <ul style="font-size: 0.7rem; color: #666; padding-left: 15px;">${mediaLinks || 'No media attached.'}</ul>
+            const plan = await db.plans.get(l.planId); const obj = await db.objectives.get(l.objId);
+            const div = document.createElement('div'); div.className = 'card'; div.style.padding = '0';
+            div.innerHTML = `<div class="hist-summary" onclick="toggle('h-${l.id}')"><div style="font-size:0.8rem;"><b>${l.date}</b><br>${plan?.name} > ${obj?.title}</div><div style="color:var(--gold);">${'★'.repeat(l.rating)}</div></div>
+                <div id="h-${l.id}" class="hist-details"><div>${l.summary}</div><div class="media-row">${(l.media||[]).map(m=>`<img src="${m.data}">`).join('')}</div>
                 ${(l.audios||[]).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('')}
-                <div style="text-align:right;"><button onclick="deleteLog(${l.id})" class="del-icon">🗑️ DELETE</button></div></div></div>`;
+                <button style="color:red; background:none; border:none; margin-top:10px;" onclick="delHist(${l.id})">Delete</button></div>`;
+            container.appendChild(div);
         }
-        document.getElementById('history-list').innerHTML = html || "<p style='text-align:center;'>No history found.</p>";
     }
 
-    async function toggleVoiceRecording() {
-        const btn = document.getElementById('session-rec-btn');
-        if(!recorder) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recorder = new MediaRecorder(stream);
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        sessionAudios.push(reader.result);
-                        const au = document.createElement('audio'); au.src = reader.result; au.controls = true; au.style.width="100%";
-                        document.getElementById('session-audio-prev').appendChild(au);
-                    };
-                    reader.readAsDataURL(blob); chunks = [];
-                };
-                recorder.start(); btn.innerText = "🛑 Stop"; btn.style.background = "black";
-            } catch (e) { alert("Mic denied."); }
-        } else { recorder.stop(); recorder = null; btn.innerText = "🎤 Voice Note"; btn.style.background = "var(--danger)"; }
+    async function renderReports() {
+        const logs = await db.logs.toArray(); const plans = await db.plans.toArray(); const objectives = await db.objectives.toArray();
+        const last7 = logs.filter(l => (new Date() - new Date(l.date)) / (1000*60*60*24) <= 7).length;
+        document.getElementById('rep-volume').innerHTML = `Last 7 Days: <b>${last7} sessions</b>`;
+        let chartHtml = "";
+        for(let p of plans) {
+            const planObjs = objectives.filter(o => o.planId === p.id);
+            if(planObjs.length === 0) continue;
+            chartHtml += `<div style="font-size:0.7rem; font-weight:bold; margin-top:15px;">${p.name}</div>`;
+            planObjs.forEach(o => {
+                const percent = ((o.rating || 0) / 5) * 100;
+                chartHtml += `<div class="bar-row"><div class="bar-label"><span>${o.title}</span><span>${o.rating || 0}/5</span></div><div class="bar-bg"><div class="bar-fill" style="width: ${percent}%"></div></div></div>`;
+            });
+        }
+        document.getElementById('rep-visual-chart').innerHTML = chartHtml || "No data.";
     }
 
-    async function startNewSession() {
-        document.getElementById('session-init-view').style.display='none';
-        document.getElementById('session-active-card').style.display='block';
-        document.getElementById('log-date').valueAsDate = new Date();
-        const p = await db.plans.toArray();
-        document.getElementById('log-plan-link').innerHTML = '<option value="">Select Plan...</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
-        document.getElementById('log-obj-link').innerHTML = '<option value="">Select Objective...</option>';
-        currentSessionRating = 0; sessionMedia = []; sessionAudios = [];
-        document.getElementById('session-media-prev').innerHTML = ""; document.getElementById('session-audio-prev').innerHTML = "";
-        renderStars();
+    async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option value="">Select Plan...</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
+    async function updateObjectiveDropdown() { const pId = parseInt(document.getElementById('log-plan-link').value); if(!pId) return; const o = await db.objectives.where('planId').equals(pId).toArray(); document.getElementById('log-obj-link').innerHTML = o.map(x => `<option value="${x.id}">${x.title}</option>`).join(''); }
+    function renderSessionStars() { document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="setSessionRating(${v})" class="${v <= currentSessionRating ? 'filled' : ''}">${v <= currentSessionRating ? '★' : '☆'}</span>`).join(''); }
+    function setSessionRating(v) { currentSessionRating = v; renderSessionStars(); }
+    async function updateMastery(e, id, val) { e.stopPropagation(); await db.objectives.update(id, { rating: val }); renderPlans(); }
+    async function updObj(id, field, val) { let u = {}; u[field] = val; await db.objectives.update(id, u); }
+    async function addPlan() { const n = document.getElementById('new-plan-input').value; if(n) { await db.plans.add({ name: n }); renderPlans(); } }
+    async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; if(t) { await db.objectives.add({ planId: pId, title: t, rating: 0 }); renderPlans(); } }
+    async function renderPlans() {
+        const plans = await db.plans.toArray();
+        const container = document.getElementById('plans-container'); container.innerHTML = '';
+        for(let p of plans) {
+            const objs = await db.objectives.where('planId').equals(p.id).toArray();
+            const div = document.createElement('div');
+            div.innerHTML = `<div class="plan-header" onclick="toggle('p-${p.id}')">${p.name} <span>${objs.length}</span></div>
+                <div id="p-${p.id}" style="display:none; padding-left:10px; border-left:3px solid var(--navy); margin-bottom:20px;">
+                    ${objs.map(o => `<div class="obj-card"><div class="obj-summary" onclick="toggle('o-${o.id}')"><b>${o.title}</b><div class="stars" style="font-size:1rem;">${[1,2,3,4,5].map(v => `<span onclick="updateMastery(event, ${o.id}, ${v})" class="${v <= (o.rating||0) ? 'filled' : ''}">${v <= (o.rating||0) ? '★' : '☆'}</span>`).join('')}</div></div>
+                        <div id="o-${o.id}" class="obj-details" style="display:none;"><label>Criteria</label><textarea onchange="updObj(${o.id}, 'criteria', this.value)">${o.criteria || ''}</textarea></div></div>`).join('')}
+                    <input type="text" id="no-${p.id}" placeholder="Objective Name"><button class="btn-main" onclick="addObj(${p.id})">Add</button>
+                </div>`;
+            container.appendChild(div);
+        }
     }
-
-    async function updateObjectiveDropdown() {
-        const pId = parseInt(document.getElementById('log-plan-link').value);
-        if(!pId) return;
-        const o = await db.objectives.where('planId').equals(pId).toArray();
-        document.getElementById('log-obj-link').innerHTML = '<option value="">Select Objective...</option>' + o.map(x => `<option value="${x.id}">${x.title}</option>`).join('');
-    }
-
-    async function loadExercises() {
-        const oId = parseInt(document.getElementById('log-obj-link').value);
-        if(!oId) return;
-        const logs = await db.logs.where('objId').equals(oId).toArray();
-        const unique = [...new Set(logs.map(l => l.exercise).filter(Boolean))];
-        document.getElementById('log-ex-list').innerHTML = unique.map(ex => `<option value="${ex}">${ex}</option>`).join('');
-    }
-
-    function addExerciseOnFly() { const name = prompt("Exercise Name:"); if(name) { const sel = document.getElementById('log-ex-list'); sel.add(new Option(name, name, true, true)); } }
-    function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex'; }
     function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
-    function renderStars() { document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="currentSessionRating=${v};renderStars()" class="${v <= currentSessionRating ? 'filled' : ''}">★</span>`).join(''); }
-    async function updateMasteryRating(e,id,v) { e.stopPropagation(); await db.objectives.update(id,{rating:v}); renderDashboard(); renderPlans(); }
-    async function addPlan() { const n=document.getElementById('new-plan-input').value; if(n){await db.plans.add({name:n});renderPlans();}}
-    async function addObj(pId) { const t=document.getElementById(`no-${pId}`).value; if(t){await db.objectives.add({planId:pId,title:t,rating:0});renderPlans();}}
-    async function deletePlan(id) { if(confirm("Delete Plan?")) { await db.plans.delete(id); await db.objectives.where('planId').equals(id).delete(); renderPlans(); } }
-    async function deleteObj(id) { if(confirm("Delete?")) { await db.objectives.delete(id); renderPlans(); } }
-    async function deleteLog(id) { if(confirm("Delete Log?")) { await db.logs.delete(id); renderHistory(); } }
-    async function editPlan(id,n) { const nn=prompt("Edit:",n); if(nn){await db.plans.update(id,{name:nn});renderPlans();}}
-    async function editObj(id,t) { const nt=prompt("Edit:",t); if(nt){await db.objectives.update(id,{title:nt});renderPlans();}}
-    async function updCri(id,v) { await db.objectives.update(id, {criteria:v}); }
-    
-    showPage('dash');
+    async function delHist(id) { if(confirm("Delete?")) { await db.logs.delete(id); renderHistory(); } }
+    async function downloadBackup() { const all = { plans: await db.plans.toArray(), objectives: await db.objectives.toArray(), logs: await db.logs.toArray() }; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(all)], {type:"application/json"})); a.download = "Thorne_Backup.json"; a.click(); }
+
+    renderDashboard();
 </script>
 </body>
 </html>
