@@ -8,48 +8,25 @@
     <style>
         :root { --navy: #0D1B2A; --gold: #D4AF37; --bg: #F0F2F5; --white: #FFFFFF; --danger: #8B0000; --success: #2D6A4F; }
         body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
-        
         .header { background: var(--navy); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
         .header h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
-        
         nav { display: flex; background: var(--navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.2); overflow-x: auto; }
         nav button { flex: 1; min-width: 70px; padding: 12px 5px; border: none; background: none; color: #E0E1DD; font-weight: bold; font-size: 0.65rem; border-bottom: 3px solid transparent; text-transform: uppercase; }
         nav button.active { border-bottom: 3px solid var(--gold); color: var(--gold); }
-
         .container { max-width: 500px; margin: auto; padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
-
-        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 15px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-box { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-box small { color: #fff; display: block; font-size: 0.6rem; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-box big { font-size: 1.5rem; font-weight: bold; }
-
+        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; padding: 15px; }
         .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-reset { width: 100%; background: #fff; color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        
-        .stars { font-size: 1.6rem; color: #ccc; cursor: pointer; display: flex; gap: 5px; -webkit-tap-highlight-color: transparent; }
+        .btn-rec { background: var(--danger); color: white; padding: 12px; border-radius: 8px; border: none; width: 100%; margin: 10px 0; font-weight: bold; }
+        .stars { font-size: 1.6rem; color: #ccc; cursor: pointer; display: flex; gap: 5px; }
         .stars .filled { color: var(--gold); }
-        
-        .plan-header { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; align-items: center; }
-        .obj-card { background: var(--white); border-radius: 6px; margin: 8px 0; border: 1px solid #eee; overflow: hidden; }
-        .obj-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; background: #fff; align-items: center; }
-        .obj-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; }
-
-        label { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin: 12px 0 5px; }
-        textarea, input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem; }
-        
-        .btn-rec { background: var(--danger); color: white; padding: 12px; border-radius: 8px; border: none; width: 100%; margin: 10px 0; font-weight: bold; cursor: pointer; }
-        .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; min-height: 50px; }
-        .media-row img, .media-row video { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gold); flex-shrink: 0; }
+        .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; }
+        .media-row img, .media-row video { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gold); flex-shrink: 0; background: #000; }
         .hist-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .hist-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; display: none; }
-        
-        .bar-row { margin-bottom: 12px; }
-        .bar-label { font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between; }
-        .bar-bg { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--gold); transition: width 0.5s ease; }
+        label { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin: 12px 0 5px; }
+        textarea, input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; }
     </style>
 </head>
 <body>
@@ -61,21 +38,12 @@
     <button id="nav-log" onclick="showPage('log')">Session</button>
     <button id="nav-plan" onclick="showPage('plan')">Plans</button>
     <button id="nav-hist" onclick="showPage('hist')">History</button>
-    <button id="nav-rep" onclick="showPage('rep')">Report</button>
 </nav>
 
 <div class="container">
     <div id="page-dash" class="page active">
-        <div class="stat-grid">
-            <div class="stat-box"><small>Total Sessions</small><big id="stat-total-logs">0</big></div>
-            <div class="stat-box"><small>Active Plans</small><big id="stat-total-plans">0</big></div>
-        </div>
-        <div class="card">
-            <label>Mastery Overview</label>
-            <div id="dash-mastery-list" style="margin-top:10px;"></div>
-        </div>
-        <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
-        <button class="btn-reset" onclick="clearDataOnly()">🧹 CLEAR SESSIONS & RATINGS ONLY</button>
+        <div class="card" id="dash-stats">Loading...</div>
+        <button class="btn-main" onclick="showPage('log')">Start Training</button>
     </div>
 
     <div id="page-log" class="page">
@@ -83,23 +51,22 @@
             <button class="btn-main" onclick="startNewSession()">+ Start New Session</button>
         </div>
         <div id="session-active-card" style="display: none;" class="card">
-            <label>Details</label>
+            <label>Session Details</label>
             <input type="date" id="log-date">
             <select id="log-plan-link" onchange="updateObjectiveDropdown()" style="margin-top:10px;"></select>
             <select id="log-obj-link" style="margin-top:10px;"></select>
             
-            <label>Session Rating (Click same star to clear)</label>
+            <label>Session Rating</label>
             <div class="stars" id="session-stars"></div>
             
-            <label>Notes</label><textarea id="log-summary" rows="4"></textarea>
+            <label>Notes</label><textarea id="log-summary" rows="3"></textarea>
             
-            <label>Media (Photos/Videos)</label>
-            <input type="file" id="media-input" accept="image/*,video/*" onchange="handleSessionMedia(this)">
+            <label>Add Video/Photo</label>
+            <input type="file" id="media-input" accept="image/*,video/*" onchange="handleMediaUpload(this)">
             <div class="media-row" id="session-media-prev"></div>
-            <button id="btn-clear-media" class="btn-main" style="background:#eee; color:#444; font-size:0.7rem; display:none;" onclick="clearMediaQueue()">Clear Media Queue</button>
             
             <label>Voice Note</label>
-            <button class="btn-rec" id="session-rec-btn" onclick="toggleVoiceRecording()">🎤 Start Recording</button>
+            <button class="btn-rec" id="rec-btn" onclick="toggleVoice()">🎤 Start Recording</button>
             <div id="session-audio-prev"></div>
             
             <button class="btn-main" style="background:var(--success); color:white; margin-top:20px;" onclick="saveFullSession()">Save Session</button>
@@ -108,204 +75,163 @@
 
     <div id="page-plan" class="page">
         <div id="plans-container"></div>
-        <details class="card" style="padding:0;"><summary style="padding:15px; font-weight:bold; cursor:pointer;">+ Create New Plan</summary>
-            <div style="padding:15px;"><input type="text" id="new-plan-input" placeholder="Plan Name"><button class="btn-main" onclick="addPlan()">Add Plan</button></div>
-        </details>
+        <div class="card"><input type="text" id="new-plan-name" placeholder="Plan Name"><button class="btn-main" onclick="addPlan()">Add Plan</button></div>
     </div>
 
     <div id="page-hist" class="page">
         <div id="history-list"></div>
     </div>
-
-    <div id="page-rep" class="page">
-        <div class="card"><label>Total Progress</label><div id="rep-volume" style="font-size:0.9rem; margin-top:10px;"></div></div>
-        <div class="card"><label>Mastery Chart</label><div id="rep-visual-chart" class="chart-container"></div></div>
-    </div>
 </div>
 
 <script>
-    let db = new Dexie("ThorneCoreDB");
-    db.version(1).stores({ plans: '++id, name', objectives: '++id, planId, title, rating', logs: '++id, date, planId, objId' });
+    const db = new Dexie("ThorneCoreDB");
+    db.version(2).stores({ 
+        plans: '++id, name', 
+        objectives: '++id, planId, title, rating', 
+        logs: '++id, date, planId, objId' 
+    });
 
-    let currentSessionRating = 0, sessionMedia = [], sessionAudios = [], recorder, chunks = [];
+    let currentRating = 0, sessionMedia = [], sessionAudios = [], recorder, chunks = [];
 
     async function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById('page-' + id).classList.add('active');
         document.getElementById('nav-' + id).classList.add('active');
-        if(id === 'dash') renderDashboard();
+        if(id === 'dash') renderDash();
         if(id === 'plan') renderPlans();
         if(id === 'hist') renderHistory();
-        if(id === 'rep') renderReports();
     }
 
-    async function clearDataOnly() {
-        if(confirm("Clear history and ratings? Plans will be saved.")) {
-            await db.logs.clear();
-            await db.objectives.toCollection().modify({ rating: 0 });
-            renderDashboard();
-        }
+    // --- MEDIA HANDLING (BLOB BASED) ---
+    function handleMediaUpload(input) {
+        const file = input.files[0];
+        if(!file) return;
+        // Store the raw file/blob directly for better mobile support
+        sessionMedia.push(file); 
+        renderMediaPreviews();
     }
 
-    // --- VOICE RECORDER LOGIC ---
-    async function toggleVoiceRecording() {
-        const btn = document.getElementById('session-rec-btn');
+    function renderMediaPreviews() {
+        const container = document.getElementById('session-media-prev');
+        container.innerHTML = '';
+        sessionMedia.forEach(file => {
+            const url = URL.createObjectURL(file);
+            const el = file.type.startsWith('video') 
+                ? `<video src="${url}" muted playsinline></video>` 
+                : `<img src="${url}">`;
+            container.innerHTML += el;
+        });
+    }
+
+    // --- VOICE LOGIC ---
+    async function toggleVoice() {
+        const btn = document.getElementById('rec-btn');
         if (!recorder) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recorder = new MediaRecorder(stream);
-                chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => { 
-                        sessionAudios.push(e.target.result); 
-                        renderAudioPreviews(); 
-                    };
-                    reader.readAsDataURL(new Blob(chunks, { type: 'audio/ogg; codecs=opus' }));
-                };
-                recorder.start();
-                btn.innerText = "🛑 Stop Recording";
-                btn.style.background = "#000";
-            } catch (err) {
-                alert("Microphone access denied or not supported.");
-            }
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorder = new MediaRecorder(stream);
+            chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                sessionAudios.push(new Blob(chunks, { type: 'audio/ogg; codecs=opus' }));
+                renderAudioPreviews();
+            };
+            recorder.start();
+            btn.innerText = "🛑 Stop Recording";
         } else {
-            recorder.stop();
-            recorder = null;
+            recorder.stop(); recorder = null;
             btn.innerText = "🎤 Start Recording";
-            btn.style.background = "var(--danger)";
         }
     }
 
     function renderAudioPreviews() {
         const container = document.getElementById('session-audio-prev');
-        container.innerHTML = sessionAudios.map(src => `<audio src="${src}" controls style="width:100%; height:35px; margin-top:10px;"></audio>`).join('');
+        container.innerHTML = sessionAudios.map(blob => `<audio src="${URL.createObjectURL(blob)}" controls style="width:100%; margin-top:5px;"></audio>`).join('');
     }
 
-    // --- MEDIA & STARS ---
-    async function handleSessionMedia(input) {
-        const file = input.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            sessionMedia.push({ data: e.target.result, type: file.type });
-            renderMediaPreviews();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function renderMediaPreviews() {
-        const container = document.getElementById('session-media-prev');
-        container.innerHTML = sessionMedia.map(m => m.type.startsWith('video') ? `<video src="${m.data}" muted></video>` : `<img src="${m.data}">`).join('');
-        document.getElementById('btn-clear-media').style.display = sessionMedia.length > 0 ? 'block' : 'none';
-    }
-
-    function clearMediaQueue() { sessionMedia = []; document.getElementById('media-input').value = ""; renderMediaPreviews(); }
-
-    function toggleSessionRating(val) { currentSessionRating = (currentSessionRating === val) ? 0 : val; renderSessionStars(); }
-    function renderSessionStars() {
-        document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="toggleSessionRating(${v})" class="${v <= currentSessionRating ? 'filled' : ''}">${v <= currentSessionRating ? '★' : '☆'}</span>`).join('');
-    }
-
-    // --- SESSION FLOW ---
+    // --- SESSION LOGIC ---
     function startNewSession() {
         document.getElementById('session-init-view').style.display='none';
         document.getElementById('session-active-card').style.display='block';
-        document.getElementById('log-date').valueAsDate = new Date();
-        currentSessionRating = 0; sessionMedia = []; sessionAudios = [];
-        document.getElementById('session-audio-prev').innerHTML = '';
-        renderMediaPreviews(); renderSessionStars(); updatePlanDropdown();
+        sessionMedia = []; sessionAudios = []; currentRating = 0;
+        renderStars(); updatePlanDropdown();
     }
 
     async function saveFullSession() {
         const pId = parseInt(document.getElementById('log-plan-link').value);
         const oId = parseInt(document.getElementById('log-obj-link').value);
-        if(!pId || !oId) return alert("Select Plan/Objective.");
-        
-        await db.logs.add({ 
-            date: document.getElementById('log-date').value, 
-            planId: pId, objId: oId, 
-            rating: currentSessionRating, 
-            summary: document.getElementById('log-summary').value, 
-            media: sessionMedia,
+        if(!pId || !oId) return alert("Pick a Plan and Objective");
+
+        await db.logs.add({
+            date: document.getElementById('log-date').value,
+            planId: pId, objId: oId,
+            rating: currentRating,
+            summary: document.getElementById('log-summary').value,
+            media: sessionMedia, // Dexie saves Blobs perfectly
             audios: sessionAudios
         });
+        showPage('hist');
         document.getElementById('session-init-view').style.display='block';
         document.getElementById('session-active-card').style.display='none';
-        showPage('hist');
     }
 
-    // --- HISTORY (WITH VIDEO & AUDIO PLAYBACK) ---
+    // --- HISTORY RENDERING ---
     async function renderHistory() {
         const logs = await db.logs.orderBy('date').reverse().toArray();
-        const container = document.getElementById('history-list'); container.innerHTML = '';
+        const container = document.getElementById('history-list');
+        container.innerHTML = '';
         for(let l of logs) {
-            const plan = await db.plans.get(l.planId); const obj = await db.objectives.get(l.objId);
-            const div = document.createElement('div'); div.className = 'card'; div.style.padding = '0';
+            const plan = await db.plans.get(l.planId);
+            const obj = await db.objectives.get(l.objId);
+            const div = document.createElement('div');
+            div.className = 'card'; div.style.padding = '0';
             
-            let mediaHtml = (l.media || []).map(m => m.type.startsWith('video') ? `<video src="${m.data}" controls style="width:100%; margin-top:5px;"></video>` : `<img src="${m.data}" style="width:100px; height:100px; object-fit:cover; border-radius:4px; margin:5px; border:1px solid var(--gold);">`).join('');
-            let audioHtml = (l.audios || []).map(a => `<audio src="${a}" controls style="width:100%; margin-top:10px;"></audio>`).join('');
+            const mediaHtml = (l.media || []).map(file => {
+                const url = URL.createObjectURL(file);
+                return file.type.startsWith('video') 
+                    ? `<video src="${url}" controls playsinline style="width:100%; margin-top:10px;"></video>` 
+                    : `<img src="${url}" style="width:100px; height:100px; margin:5px; object-fit:cover;">`;
+            }).join('');
 
-            div.innerHTML = `<div class="hist-summary" onclick="toggle('h-${l.id}')"><div style="font-size:0.8rem;"><b>${l.date}</b><br>${plan?.name} > ${obj?.title}</div><div style="color:var(--gold);">${'★'.repeat(l.rating)}</div></div>
+            const audioHtml = (l.audios || []).map(blob => `<audio src="${URL.createObjectURL(blob)}" controls style="width:100%; margin-top:10px;"></audio>`).join('');
+
+            div.innerHTML = `
+                <div class="hist-summary" onclick="toggle('h-${l.id}')">
+                    <span><b>${l.date}</b><br>${plan?.name} > ${obj?.title}</span>
+                    <span style="color:var(--gold);">${'★'.repeat(l.rating)}</span>
+                </div>
                 <div id="h-${l.id}" class="hist-details">
-                    <div>${l.summary}</div>
-                    <div class="media-row" style="flex-wrap:wrap;">${mediaHtml}</div>
+                    <p>${l.summary}</p>
+                    <div style="display:flex; flex-wrap:wrap;">${mediaHtml}</div>
                     ${audioHtml}
-                    <button style="color:red; background:none; border:none; margin-top:15px; font-size:0.7rem;" onclick="delHist(${l.id})">Delete Session</button>
+                    <button style="color:red; border:none; background:none; margin-top:10px;" onclick="delLog(${l.id})">Delete</button>
                 </div>`;
             container.appendChild(div);
         }
     }
 
-    // --- OTHER UI RENDERERS ---
-    async function renderDashboard() {
-        const logs = await db.logs.toArray(); const plans = await db.plans.toArray(); const objs = await db.objectives.toArray();
-        document.getElementById('stat-total-logs').innerText = logs.length;
-        document.getElementById('stat-total-plans').innerText = plans.length;
-        const mastery = objs.length > 0 ? objs.filter(o => (o.rating || 0) >= 4).length : 0;
-        const masteryPercent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
-        document.getElementById('dash-mastery-list').innerHTML = `<div style="font-size:0.8rem;">Mastered: <b>${mastery} / ${objs.length}</b></div><div style="height:8px; background:#ddd; border-radius:4px; margin-top:5px; overflow:hidden;"><div style="width:${masteryPercent}%; height:100%; background:var(--gold);"></div></div>`;
+    // --- HELPERS ---
+    function renderStars() {
+        document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="setRate(${v})" class="${v <= currentRating ? 'filled' : ''}">${v <= currentRating ? '★' : '☆'}</span>`).join('');
     }
-
+    function setRate(v) { currentRating = (currentRating === v) ? 0 : v; renderStars(); }
+    function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display==='block' ? 'none' : 'block'; }
+    async function delLog(id) { if(confirm("Delete?")) { await db.logs.delete(id); renderHistory(); } }
+    async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option value="">Select Plan</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
+    async function updateObjectiveDropdown() { const pId = parseInt(document.getElementById('log-plan-link').value); const o = await db.objectives.where('planId').equals(pId).toArray(); document.getElementById('log-obj-link').innerHTML = o.map(x => `<option value="${x.id}">${x.title}</option>`).join(''); }
+    async function addPlan() { const n = document.getElementById('new-plan-name').value; if(n) { await db.plans.add({name: n}); renderPlans(); } }
     async function renderPlans() {
         const plans = await db.plans.toArray();
         const container = document.getElementById('plans-container'); container.innerHTML = '';
         for(let p of plans) {
             const objs = await db.objectives.where('planId').equals(p.id).toArray();
-            const div = document.createElement('div');
-            div.innerHTML = `<div class="plan-header" onclick="toggle('p-${p.id}')">${p.name} <span>${objs.length}</span></div>
-                <div id="p-${p.id}" style="display:none; padding-left:10px; border-left:3px solid var(--navy); margin-bottom:20px;">
-                    ${objs.map(o => `<div class="obj-card"><div class="obj-summary" onclick="toggle('o-${o.id}')"><b>${o.title}</b><div class="stars" style="font-size:1rem;">${[1,2,3,4,5].map(v => `<span onclick="toggleMasteryRating(event, ${o.id}, ${v})" class="${v <= (o.rating||0) ? 'filled' : ''}">${v <= (o.rating||0) ? '★' : '☆'}</span>`).join('')}</div></div><div id="o-${o.id}" class="obj-details" style="display:none;"><label>Criteria</label><textarea onchange="updObj(${o.id}, 'criteria', this.value)">${o.criteria || ''}</textarea></div></div>`).join('')}
-                    <input type="text" id="no-${p.id}" placeholder="Objective Name"><button class="btn-main" onclick="addObj(${p.id})">Add</button>
-                </div>`;
-            container.appendChild(div);
+            container.innerHTML += `<div class="card"><b>${p.name}</b><hr>${objs.map(o => `<div>${o.title}</div>`).join('')}<input id="no-${p.id}"><button onclick="addObj(${p.id})">Add Objective</button></div>`;
         }
     }
+    async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; await db.objectives.add({planId: pId, title: t, rating: 0}); renderPlans(); }
+    async function renderDash() { const logs = await db.logs.toArray(); document.getElementById('dash-stats').innerHTML = `Total Sessions: ${logs.length}`; }
 
-    async function toggleMasteryRating(e, id, val) { e.stopPropagation(); const obj = await db.objectives.get(id); const newVal = (obj.rating === val) ? 0 : val; await db.objectives.update(id, { rating: newVal }); renderPlans(); }
-    async function renderReports() {
-        const logs = await db.logs.toArray(); const plans = await db.plans.toArray(); const objectives = await db.objectives.toArray();
-        document.getElementById('rep-volume').innerHTML = `Total Sessions: <b>${logs.length}</b>`;
-        let chartHtml = "";
-        for(let p of plans) {
-            const planObjs = objectives.filter(o => o.planId === p.id); if(planObjs.length === 0) continue;
-            chartHtml += `<div style="font-size:0.7rem; font-weight:bold; margin-top:15px;">${p.name}</div>`;
-            planObjs.forEach(o => { const percent = ((o.rating || 0) / 5) * 100; chartHtml += `<div class="bar-row"><div class="bar-label"><span>${o.title}</span><span>${o.rating || 0}/5</span></div><div class="bar-bg"><div class="bar-fill" style="width: ${percent}%"></div></div></div>`; });
-        }
-        document.getElementById('rep-visual-chart').innerHTML = chartHtml || "No data.";
-    }
-
-    async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option value="">Select Plan...</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
-    async function updateObjectiveDropdown() { const pId = parseInt(document.getElementById('log-plan-link').value); if(!pId) return; const o = await db.objectives.where('planId').equals(pId).toArray(); document.getElementById('log-obj-link').innerHTML = o.map(x => `<option value="${x.id}">${x.title}</option>`).join(''); }
-    async function updObj(id, field, val) { let u = {}; u[field] = val; await db.objectives.update(id, u); }
-    async function addPlan() { const n = document.getElementById('new-plan-input').value; if(n) { await db.plans.add({ name: n }); renderPlans(); } }
-    async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; if(t) { await db.objectives.add({ planId: pId, title: t, rating: 0 }); renderPlans(); } }
-    function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display === 'block' ? 'none' : 'block'; }
-    async function delHist(id) { if(confirm("Delete?")) { await db.logs.delete(id); renderHistory(); } }
-
-    renderDashboard();
+    showPage('dash');
 </script>
 </body>
 </html>
