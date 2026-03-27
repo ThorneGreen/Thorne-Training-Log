@@ -22,29 +22,41 @@
 
         .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
         
+        /* LOCKED: PLANS TAB STYLES */
         .plan-summary { background: var(--navy); color: var(--gold); padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); }
         .plan-content { display: none; background: #fff; }
-
         .obj-card { border: 1px solid #eee; margin: 10px; border-radius: 6px; background: #fdfdfd; }
         .obj-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
         .obj-content { padding: 15px; display: none; background: #fff; }
-        
         .stars { font-size: 1.2rem; color: #ccc; cursor: pointer; display: flex; gap: 3px; }
         .stars .filled { color: var(--gold); }
-        
         .plan-stars { font-size: 1.4rem; color: var(--gold); margin-top: 5px; letter-spacing: 4px; line-height: 1; display: block; }
         
         label { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin-top: 15px; margin-bottom: 5px; }
         textarea, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; font-family: inherit; }
         
         .date-badge { font-size: 0.7rem; color: var(--gold); background: rgba(212,175,55,0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
-
         .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-rec { background: var(--danger); color: white; padding: 8px; border-radius: 4px; border: none; width: 100%; font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
         
+        /* LOCKED: DASHBOARD STYLES */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-box { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-box { background: var(--navy); color: var(--gold); padding: 12px 10px; border-radius: 8px; text-align: center; }
         .stat-box big { font-size: 1.5rem; font-weight: bold; display: block; }
+        .stat-breakdown { font-size: 0.6rem; margin-top: 8px; text-align: left; opacity: 0.9; border-top: 1px solid rgba(212,175,55,0.3); padding-top: 5px; max-height: 150px; overflow-y: auto; }
+        .plan-vol-group { margin-bottom: 5px; }
+        .plan-vol-header { display: flex; justify-content: space-between; font-weight: bold; color: #fff; cursor: pointer; padding: 2px 0; }
+        .obj-vol-container { display: none; border-left: 1px solid rgba(212,175,55,0.3); margin-left: 4px; margin-bottom: 5px; }
+        .obj-vol-row { display: flex; justify-content: space-between; padding-left: 8px; color: var(--gold); opacity: 0.8; font-style: italic; margin-top: 2px; }
+
+        .progress-container { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 8px; position: relative; }
+        .progress-bar { height: 100%; background: var(--gold); transition: width 0.3s ease; }
+        .dash-section-title { font-size: 0.75rem; font-weight: bold; color: var(--navy); text-transform: uppercase; margin: 20px 0 10px 5px; border-left: 3px solid var(--gold); padding-left: 8px; }
+        .dash-plan-card { margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .dash-plan-summary { background: #fff; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .dash-plan-details { display: none; background: #fcfcfc; padding: 10px 15px 15px; border-top: 1px solid #eee; }
+        .obj-mini-row { margin-top: 12px; }
+        .obj-mini-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: #444; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -61,10 +73,26 @@
 <div class="container">
     <div id="page-dash" class="page active">
         <div class="stat-grid">
-            <div class="stat-box"><small>Total Sessions</small><big id="stat-total-logs">0</big></div>
-            <div class="stat-box"><small>Active Plans</small><big id="stat-total-plans">0</big></div>
+            <div class="stat-box">
+                <small>Total Sessions</small>
+                <big id="stat-total-logs">0</big>
+                <div id="volume-deep-breakdown" class="stat-breakdown"></div>
+            </div>
+            <div class="stat-box">
+                <small>Active Plans</small>
+                <big id="stat-total-plans">0</big>
+            </div>
         </div>
-        <div class="card" style="padding:15px;"><div id="dash-mastery-list"></div></div>
+        <div class="card" style="padding:15px;">
+            <label>Global Mastery Overview</label>
+            <div id="global-mastery-stats" style="font-size:0.8rem; margin-bottom:5px; display:flex; justify-content: space-between;">
+                <span>Mastered: <b id="global-count">0/0</b></span>
+                <span id="global-percent">0%</span>
+            </div>
+            <div class="progress-container"><div id="global-progress-bar" class="progress-bar" style="width: 0%;"></div></div>
+        </div>
+        <div class="dash-section-title">Plan Mastery Breakdowns</div>
+        <div id="plan-mastery-list"></div>
         <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
     </div>
 
@@ -98,7 +126,6 @@
 </div>
 
 <script>
-    // Incremented version to add plan description
     const db = new Dexie("ThorneCoreDB");
     db.version(5).stores({ 
         plans: '++id, name, targetDate, description', 
@@ -108,6 +135,8 @@
 
     let openPlanId = null;
     let openObjIds = new Set();
+    let dashOpenPlanIds = new Set();
+    let volOpenPlanIds = new Set();
     let currentLogRate = 0, recorder, chunks = [];
 
     async function showPage(id) {
@@ -121,159 +150,110 @@
         if(id === 'log') { updatePlanDropdown(); renderLogStars(); document.getElementById('log-date').valueAsDate = new Date(); }
     }
 
+    /* --- LOCKED DASHBOARD LOGIC --- */
+    function toggleVolPlan(pId) {
+        const el = document.getElementById(`vol-obj-cont-${pId}`);
+        const isOpening = el.style.display !== 'block';
+        el.style.display = isOpening ? 'block' : 'none';
+        if(isOpening) volOpenPlanIds.add(pId); else volOpenPlanIds.delete(pId);
+    }
+    function toggleDashPlan(pId) {
+        const el = document.getElementById(`dash-plan-det-${pId}`);
+        const isOpening = el.style.display !== 'block';
+        el.style.display = isOpening ? 'block' : 'none';
+        if(isOpening) dashOpenPlanIds.add(pId); else dashOpenPlanIds.delete(pId);
+    }
+    async function renderDash() {
+        const logs = await db.logs.toArray();
+        const plans = await db.plans.toArray();
+        const objs = await db.objectives.toArray();
+        document.getElementById('stat-total-logs').innerText = logs.length;
+        document.getElementById('stat-total-plans').innerText = plans.length;
+        const volumeEl = document.getElementById('volume-deep-breakdown');
+        volumeEl.innerHTML = '';
+        for(let p of plans) {
+            const planLogs = logs.filter(l => l.planId === p.id);
+            if(planLogs.length > 0) {
+                const isExpanded = volOpenPlanIds.has(p.id);
+                let planHtml = `<div class="plan-vol-group"><div class="plan-vol-header" onclick="toggleVolPlan(${p.id})"><span>${p.name} ▾</span><span>${planLogs.length}</span></div><div id="vol-obj-cont-${p.id}" class="obj-vol-container" style="display: ${isExpanded ? 'block' : 'none'}">`;
+                const pObjs = objs.filter(o => o.planId === p.id);
+                for(let o of pObjs) {
+                    const objLogs = planLogs.filter(l => l.objId === o.id);
+                    if(objLogs.length > 0) planHtml += `<div class="obj-vol-row"><span>${o.title}</span><span>${objLogs.length}</span></div>`;
+                }
+                planHtml += `</div></div>`;
+                volumeEl.innerHTML += planHtml;
+            }
+        }
+        const masteredObjs = objs.filter(o => (o.rating || 0) >= 4);
+        const globalPercent = objs.length > 0 ? Math.round((masteredObjs.length / objs.length) * 100) : 0;
+        document.getElementById('global-count').innerText = `${masteredObjs.length}/${objs.length}`;
+        document.getElementById('global-percent').innerText = `${globalPercent}%`;
+        document.getElementById('global-progress-bar').style.width = `${globalPercent}%`;
+        const planList = document.getElementById('plan-mastery-list');
+        planList.innerHTML = '';
+        for(let p of plans) {
+            const pObjs = objs.filter(o => o.planId === p.id);
+            const pMastered = pObjs.filter(o => (o.rating || 0) >= 4).length;
+            const pPercent = pObjs.length > 0 ? Math.round((pMastered / pObjs.length) * 100) : 0;
+            const isOpen = dashOpenPlanIds.has(p.id);
+            let objBreakdownHtml = '';
+            for(let o of pObjs) {
+                const oPercent = Math.round(((o.rating || 0) / 5) * 100);
+                objBreakdownHtml += `<div class="obj-mini-row"><div class="obj-mini-label"><span>${o.title}</span><span>${o.rating || 0}/5</span></div><div class="progress-container" style="height:4px; margin-top:2px; background:#e0e0e0;"><div class="progress-bar" style="width: ${oPercent}%; background:${o.rating >= 4 ? 'var(--success)' : 'var(--gold)'};"></div></div></div>`;
+            }
+            planList.innerHTML += `<div class="dash-plan-card"><div class="dash-plan-summary" onclick="toggleDashPlan(${p.id})"><div style="flex:1;"><div style="font-weight:bold; font-size:0.9rem;">${p.name}</div><div class="progress-container" style="width:80%;"><div class="progress-bar" style="width: ${pPercent}%;"></div></div></div><div style="text-align:right; margin-left:10px;"><div style="color:var(--gold); font-weight:bold; font-size:0.9rem;">${pPercent}%</div><div style="font-size:0.6rem; color:#888;">${pMastered}/${pObjs.length} Obj</div></div></div><div id="dash-plan-det-${p.id}" class="dash-plan-details" style="display: ${isOpen ? 'block' : 'none'}">${objBreakdownHtml || '<div style=\"font-size:0.7rem; color:#999;\">No objectives added.</div>'}</div></div>`;
+        }
+    }
+
+    /* --- LOCKED PLANS LOGIC --- */
     function togglePlan(id, pId = null) {
-        const e = document.getElementById(id);
-        const isOpening = e.style.display !== 'block';
-        e.style.display = isOpening ? 'block' : 'none';
-        if(pId) openPlanId = isOpening ? pId : null;
+        const e = document.getElementById(id); e.style.display = e.style.display !== 'block' ? 'block' : 'none';
+        if(pId) openPlanId = e.style.display === 'block' ? pId : null;
     }
-
     function toggleObj(id, oId) {
-        const e = document.getElementById(id);
-        const isOpening = e.style.display !== 'block';
-        e.style.display = isOpening ? 'block' : 'none';
-        if(isOpening) openObjIds.add(oId); else openObjIds.delete(oId);
+        const e = document.getElementById(id); e.style.display = e.style.display !== 'block' ? 'block' : 'none';
+        if(e.style.display === 'block') openObjIds.add(oId); else openObjIds.delete(oId);
     }
-
     async function renderPlans() {
         const plans = await db.plans.toArray();
         const container = document.getElementById('plans-container');
         container.innerHTML = '';
-
         for(let p of plans) {
             const objs = await db.objectives.where('planId').equals(p.id).toArray();
             const avg = objs.length ? Math.round(objs.reduce((a, b) => a + (b.rating || 0), 0) / objs.length) : 0;
-            
-            const planDiv = document.createElement('div');
-            planDiv.className = 'card';
-            
+            const planDiv = document.createElement('div'); planDiv.className = 'card';
             let objsHtml = '';
             for(let o of objs) {
-                objsHtml += `
-                <div class="obj-card">
-                    <div class="obj-summary" onclick="toggleObj('oc-${o.id}', ${o.id})">
-                        <div style="display:flex; flex-direction:column;">
-                            <span style="font-weight:bold;">${o.title}</span>
-                            ${o.targetDate ? `<span class="date-badge">Target: ${o.targetDate}</span>` : ''}
-                        </div>
-                        <div class="stars" onclick="event.stopPropagation()">${renderStarsStatic(o.rating, o.id)}</div>
-                    </div>
-                    <div id="oc-${o.id}" class="obj-content" style="display: ${openObjIds.has(o.id) ? 'block' : 'none'}">
-                        <label>Objective Title</label>
-                        <input type="text" value="${o.title}" onchange="updateObj(${o.id}, 'title', this.value)">
-                        
-                        <label>Target Completion Date</label>
-                        <input type="date" value="${o.targetDate || ''}" onchange="updateObj(${o.id}, 'targetDate', this.value); renderPlans();">
-
-                        <label>Description</label>
-                        <textarea rows="3" onchange="updateObj(${o.id}, 'description', this.value)">${o.description || ''}</textarea>
-                        
-                        <label>Trainer Comments</label>
-                        <textarea rows="2" onchange="updateObj(${o.id}, 'comments', this.value)">${o.comments || ''}</textarea>
-                        
-                        <label>Voice Note</label>
-                        <button class="btn-rec" onclick="toggleVoiceObj(${o.id})" id="rec-btn-${o.id}">🎤 Record</button>
-                        <div id="audio-prev-${o.id}">${o.audio ? `<audio src="${URL.createObjectURL(o.audio)}" controls style="width:100%; margin-top:5px;"></audio>` : ''}</div>
-                        
-                        <button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:15px; width:100%;" onclick="delObj(${o.id})">Delete Objective</button>
-                    </div>
-                </div>`;
+                objsHtml += `<div class="obj-card"><div class="obj-summary" onclick="toggleObj('oc-${o.id}', ${o.id})"><div style="display:flex; flex-direction:column;"><span style="font-weight:bold;">${o.title}</span>${o.targetDate ? `<span class=\"date-badge\">Target: ${o.targetDate}</span>` : ''}</div><div class="stars" onclick="event.stopPropagation()">${renderStarsStatic(o.rating, o.id)}</div></div><div id="oc-${o.id}" class="obj-content" style="display: ${openObjIds.has(o.id) ? 'block' : 'none'}"><label>Objective Title</label><input type="text" value="${o.title}" onchange="updateObj(${o.id}, 'title', this.value)"><label>Target Date</label><input type="date" value="${o.targetDate || ''}" onchange="updateObj(${o.id}, 'targetDate', this.value); renderPlans();"><label>Description</label><textarea rows="3" onchange="updateObj(${o.id}, 'description', this.value)">${o.description || ''}</textarea><label>Trainer Comments</label><textarea rows="2" onchange="updateObj(${o.id}, 'comments', this.value)">${o.comments || ''}</textarea><label>Voice Note</label><button class="btn-rec" onclick="toggleVoiceObj(${o.id})" id="rec-btn-${o.id}">🎤 Record</button><div id="audio-prev-${o.id}">${o.audio ? `<audio src="${URL.createObjectURL(o.audio)}" controls style="width:100%; margin-top:5px;"></audio>` : ''}</div><button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:15px; width:100%;" onclick="delObj(${o.id})">Delete Objective</button></div></div>`;
             }
-
-            planDiv.innerHTML = `
-                <div class="plan-summary" onclick="togglePlan('pc-${p.id}', ${p.id})">
-                    <div style="display:flex; flex-direction:column;">
-                        <span>${p.name.toUpperCase()}</span>
-                        <span class="plan-stars">${'★'.repeat(avg)}${'☆'.repeat(5-avg)}</span>
-                        ${p.targetDate ? `<span style="font-size:0.6rem; color:white; opacity:0.8;">Deadline: ${p.targetDate}</span>` : ''}
-                    </div>
-                    <span>OBJ: ${objs.length} ▾</span>
-                </div>
-                <div id="pc-${p.id}" class="plan-content" style="display: ${openPlanId === p.id ? 'block' : 'none'}">
-                    <div style="padding:15px; background:#f9f9f9; border-bottom:1px solid #eee;">
-                         <label>Master Plan Target Date</label>
-                         <input type="date" value="${p.targetDate || ''}" onchange="updatePlanData(${p.id}, 'targetDate', this.value); renderPlans();">
-                         
-                         <label>Plan Overview / Description</label>
-                         <textarea rows="3" placeholder="Describe the focus or overall goal of this plan..." onchange="updatePlanData(${p.id}, 'description', this.value)">${p.description || ''}</textarea>
-                    </div>
-                    ${objsHtml}
-                    <div style="padding:15px; border-top:1px solid #eee;">
-                        <input type="text" id="no-${p.id}" placeholder="New Objective Name">
-                        <button class="btn-main" onclick="addObj(${p.id})">+ Add Objective</button>
-                        <button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:10px; width:100%;" onclick="delPlan(${p.id})">Delete Entire Plan</button>
-                    </div>
-                </div>`;
+            planDiv.innerHTML = `<div class="plan-summary" onclick="togglePlan('pc-${p.id}', ${p.id})"><div style="display:flex; flex-direction:column;"><span>${p.name.toUpperCase()}</span><span class="plan-stars">${'★'.repeat(avg)}${'☆'.repeat(5-avg)}</span></div><span>OBJ: ${objs.length} ▾</span></div><div id="pc-${p.id}" class="plan-content" style="display: ${openPlanId === p.id ? 'block' : 'none'}"><div style="padding:15px; background:#f9f9f9; border-bottom:1px solid #eee;"><label>Target Date</label><input type="date" value="${p.targetDate || ''}" onchange="updatePlanData(${p.id}, 'targetDate', this.value); renderPlans();"><label>Plan Overview</label><textarea rows="3" onchange="updatePlanData(${p.id}, 'description', this.value)">${p.description || ''}</textarea></div>${objsHtml}<div style="padding:15px; border-top:1px solid #eee;"><input type="text" id="no-${p.id}" placeholder="New Objective Name"><button class="btn-main" onclick="addObj(${p.id})">+ Add Objective</button><button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:10px; width:100%;" onclick="delPlan(${p.id})">Delete Entire Plan</button></div></div>`;
             container.appendChild(planDiv);
         }
     }
-
-    function renderStarsStatic(rating, objId) {
-        return [1,2,3,4,5].map(v => `<span onclick="setObjRate(event, ${objId}, ${v})" class="${v <= (rating||0) ? 'filled' : ''}">${v <= (rating||0) ? '★' : '☆'}</span>`).join('');
-    }
-
-    async function setObjRate(e, id, val) {
-        e.stopPropagation(); 
-        const obj = await db.objectives.get(id);
-        await db.objectives.update(id, { rating: obj.rating === val ? 0 : val });
-        renderPlans();
-    }
-
-    async function updateObj(id, field, val) {
-        let update = {}; update[field] = val;
-        await db.objectives.update(id, update);
-    }
-
-    async function updatePlanData(id, field, val) {
-        let update = {}; update[field] = val;
-        await db.plans.update(id, update);
-    }
-
+    function renderStarsStatic(rating, objId) { return [1,2,3,4,5].map(v => `<span onclick="setObjRate(event, ${objId}, ${v})" class="${v <= (rating||0) ? 'filled' : ''}">${v <= (rating||0) ? '★' : '☆'}</span>`).join(''); }
+    async function setObjRate(e, id, val) { e.stopPropagation(); const obj = await db.objectives.get(id); await db.objectives.update(id, { rating: obj.rating === val ? 0 : val }); renderPlans(); }
+    async function updateObj(id, field, val) { let update = {}; update[field] = val; await db.objectives.update(id, update); }
+    async function updatePlanData(id, field, val) { let update = {}; update[field] = val; await db.plans.update(id, update); }
     async function toggleVoiceObj(id) {
         const btn = document.getElementById(`rec-btn-${id}`);
         if (!recorder) {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recorder = new MediaRecorder(stream);
-            chunks = [];
-            recorder.ondataavailable = e => chunks.push(e.data);
+            chunks = []; recorder.ondataavailable = e => chunks.push(e.data);
             recorder.onstop = async () => {
                 const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-                await db.objectives.update(id, { audio: blob });
-                renderPlans();
+                await db.objectives.update(id, { audio: blob }); renderPlans();
             };
             recorder.start(); btn.innerText = "🛑 Stop";
-        } else {
-            recorder.stop(); recorder = null; btn.innerText = "🎤 Record";
-        }
+        } else { recorder.stop(); recorder = null; btn.innerText = "🎤 Record"; }
     }
-
-    async function addPlan() {
-        const n = document.getElementById('new-plan-name').value;
-        if(n) { await db.plans.add({name: n, targetDate: '', description: ''}); document.getElementById('new-plan-name').value=''; renderPlans(); }
-    }
-
-    async function addObj(pId) {
-        const n = document.getElementById(`no-${pId}`).value;
-        if(n) { await db.objectives.add({planId: pId, title: n, rating: 0, targetDate: '', description: '', comments: ''}); renderPlans(); }
-    }
-
+    async function addPlan() { const n = document.getElementById('new-plan-name').value; if(n) { await db.plans.add({name: n, targetDate: '', description: ''}); document.getElementById('new-plan-name').value=''; renderPlans(); } }
+    async function addObj(pId) { const n = document.getElementById(`no-${pId}`).value; if(n) { await db.objectives.add({planId: pId, title: n, rating: 0, targetDate: '', description: '', comments: ''}); renderPlans(); } }
     async function delObj(id) { if(confirm("Delete objective?")) { await db.objectives.delete(id); renderPlans(); } }
     async function delPlan(id) { if(confirm("Delete entire plan?")) { await db.plans.delete(id); await db.objectives.where('planId').equals(id).delete(); renderPlans(); } }
 
-    async function renderDash() {
-        const logs = await db.logs.toArray();
-        const plans = await db.plans.toArray();
-        const objs = await db.objectives.toArray();
-        const mastery = objs.filter(o => (o.rating || 0) >= 4).length;
-        const percent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
-        document.getElementById('stat-total-logs').innerText = logs.length;
-        document.getElementById('stat-total-plans').innerText = plans.length;
-        document.getElementById('dash-mastery-list').innerHTML = `
-            <label>Mastery Overview</label>
-            <div style="font-size:0.8rem; margin-bottom:5px;">Mastered: <b>${mastery}/${objs.length}</b></div>
-            <div style="height:10px; background:#ddd; border-radius:5px; overflow:hidden;"><div style="width:${percent}%; height:100%; background:var(--gold);"></div></div>`;
-    }
-
+    /* --- LOGGING & HISTORY --- */
     async function saveQuickSession() {
         const pId = parseInt(document.getElementById('log-plan-link').value);
         const oId = parseInt(document.getElementById('log-obj-link').value);
@@ -285,19 +265,14 @@
         });
         showPage('hist');
     }
-
     async function renderHistory() {
         const logs = await db.logs.orderBy('date').reverse().toArray();
         const container = document.getElementById('history-list'); container.innerHTML = '';
         for(let l of logs) {
             const plan = await db.plans.get(l.planId); const obj = await db.objectives.get(l.objId);
-            container.innerHTML += `<div class="card" style="padding:15px; font-size:0.85rem;">
-                <b>${l.date}</b><br>${plan?.name} > ${obj?.title} <span style="color:var(--gold); float:right;">${'★'.repeat(l.rating)}</span>
-                <p style="margin:10px 0 0; color:#555;">${l.summary}</p>
-            </div>`;
+            container.innerHTML += `<div class="card" style="padding:15px; font-size:0.85rem;"><b>${l.date}</b><br>${plan?.name} > ${obj?.title} <span style="color:var(--gold); float:right;">${'★'.repeat(l.rating)}</span><p style="margin:10px 0 0; color:#555;">${l.summary}</p></div>`;
         }
     }
-
     function renderLogStars() { document.getElementById('log-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="currentLogRate=${v};renderLogStars()" class="${v <= currentLogRate ? 'filled' : ''}">${v <= currentLogRate ? '★' : '☆'}</span>`).join(''); }
     async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option>Select Plan</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
     async function updateObjectiveDropdown() { const pId = parseInt(document.getElementById('log-plan-link').value); const o = await db.objectives.where('planId').equals(pId).toArray(); document.getElementById('log-obj-link').innerHTML = o.map(x => `<option value="${x.id}">${x.title}</option>`).join(''); }
