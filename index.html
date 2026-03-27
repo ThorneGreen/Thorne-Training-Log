@@ -7,41 +7,44 @@
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <style>
         :root { --navy: #0D1B2A; --gold: #D4AF37; --bg: #F0F2F5; --white: #FFFFFF; --danger: #8B0000; --success: #2D6A4F; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: var(--navy); }
         
         .header { background: var(--navy); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
         .header h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
         
-        nav { display: flex; background: var(--navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.2); overflow-x: auto; }
-        nav button { flex: 1; min-width: 70px; padding: 12px 5px; border: none; background: none; color: #E0E1DD; font-weight: bold; font-size: 0.65rem; border-bottom: 3px solid transparent; text-transform: uppercase; }
+        nav { display: flex; background: var(--navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.2); }
+        nav button { flex: 1; padding: 12px 5px; border: none; background: none; color: #E0E1DD; font-weight: bold; font-size: 0.65rem; border-bottom: 3px solid transparent; text-transform: uppercase; }
         nav button.active { border-bottom: 3px solid var(--gold); color: var(--gold); }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
         .page { display: none; }
         .page.active { display: block; }
 
-        /* DASHBOARD STYLES */
-        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 15px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-box { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-box small { color: #fff; display: block; font-size: 0.6rem; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-box big { font-size: 1.5rem; font-weight: bold; }
-
-        .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-reset { width: 100%; background: #fff; color: var(--danger); border: 1px solid var(--danger); padding: 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
         
-        .stars { font-size: 1.6rem; color: #ccc; cursor: pointer; display: flex; gap: 5px; }
+        .plan-summary { background: var(--navy); color: var(--gold); padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); }
+        .plan-content { display: none; background: #fff; }
+
+        .obj-card { border: 1px solid #eee; margin: 10px; border-radius: 6px; background: #fdfdfd; }
+        .obj-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .obj-content { padding: 15px; display: none; background: #fff; }
+        
+        .stars { font-size: 1.2rem; color: #ccc; cursor: pointer; display: flex; gap: 3px; }
         .stars .filled { color: var(--gold); }
         
-        .media-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; min-height: 50px; }
-        .media-row img, .media-row video { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gold); flex-shrink: 0; background: #000; }
+        .plan-stars { font-size: 1.4rem; color: var(--gold); margin-top: 5px; letter-spacing: 4px; line-height: 1; display: block; }
         
-        label { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin: 12px 0 5px; }
-        textarea, input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; }
+        label { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin-top: 15px; margin-bottom: 5px; }
+        textarea, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; font-family: inherit; }
         
-        .btn-rec { background: var(--danger); color: white; padding: 12px; border-radius: 8px; border: none; width: 100%; margin: 10px 0; font-weight: bold; }
-        .hist-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .hist-details { padding: 15px; border-top: 1px solid #eee; background: #fafafa; display: none; }
+        .date-badge { font-size: 0.7rem; color: var(--gold); background: rgba(212,175,55,0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+        .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-rec { background: var(--danger); color: white; padding: 8px; border-radius: 4px; border: none; width: 100%; font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
+        
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: var(--navy); color: var(--gold); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-box big { font-size: 1.5rem; font-weight: bold; display: block; }
     </style>
 </head>
 <body>
@@ -61,62 +64,51 @@
             <div class="stat-box"><small>Total Sessions</small><big id="stat-total-logs">0</big></div>
             <div class="stat-box"><small>Active Plans</small><big id="stat-total-plans">0</big></div>
         </div>
-        <div class="card">
-            <label>Mastery Overview</label>
-            <div id="dash-mastery-list" style="margin-top:10px;"></div>
-        </div>
+        <div class="card" style="padding:15px;"><div id="dash-mastery-list"></div></div>
         <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
-        <button class="btn-reset" onclick="clearDataOnly()">🧹 CLEAR SESSIONS & RATINGS ONLY</button>
-    </div>
-
-    <div id="page-log" class="page">
-        <div id="session-init-view" style="text-align:center; padding: 40px 0;">
-            <button class="btn-main" onclick="startNewSession()">+ Start New Session</button>
-        </div>
-        <div id="session-active-card" style="display: none;" class="card">
-            <label>Details</label>
-            <input type="date" id="log-date">
-            <select id="log-plan-link" onchange="updateObjectiveDropdown()" style="margin-top:10px;"></select>
-            <select id="log-obj-link" style="margin-top:10px;"></select>
-            
-            <label>Session Rating (Click same star to clear)</label>
-            <div class="stars" id="session-stars"></div>
-            
-            <label>Notes</label><textarea id="log-summary" rows="3"></textarea>
-            
-            <label>Media (Photos/Videos)</label>
-            <input type="file" id="media-input" accept="image/*,video/*" onchange="handleMediaUpload(this)">
-            <div class="media-row" id="session-media-prev"></div>
-            
-            <label>Voice Note</label>
-            <button class="btn-rec" id="rec-btn" onclick="toggleVoice()">🎤 Start Recording</button>
-            <div id="session-audio-prev"></div>
-            
-            <button class="btn-main" style="background:var(--success); color:white; margin-top:20px;" onclick="saveFullSession()">Save Session</button>
-        </div>
     </div>
 
     <div id="page-plan" class="page">
         <div id="plans-container"></div>
-        <details class="card" style="padding:0;"><summary style="padding:15px; font-weight:bold; cursor:pointer;">+ Create New Plan</summary>
-            <div style="padding:15px;"><input type="text" id="new-plan-name" placeholder="Plan Name"><button class="btn-main" onclick="addPlan()">Add Plan</button></div>
-        </details>
+        <div class="card">
+            <div class="plan-summary" onclick="togglePlan('new-plan-form-container')">
+                <span>+ CREATE NEW PLAN</span>
+                <span>▾</span>
+            </div>
+            <div id="new-plan-form-container" class="plan-content" style="padding:15px;">
+                <label>Plan Name</label>
+                <input type="text" id="new-plan-name" placeholder="e.g. Schutzhund Tracking">
+                <button class="btn-main" onclick="addPlan()">Create Plan</button>
+            </div>
+        </div>
     </div>
 
-    <div id="page-hist" class="page">
-        <div id="history-list"></div>
+    <div id="page-log" class="page">
+        <div class="card" style="padding:15px;">
+            <label>Date</label><input type="date" id="log-date">
+            <label>Plan</label><select id="log-plan-link" onchange="updateObjectiveDropdown()"></select>
+            <label>Objective</label><select id="log-obj-link"></select>
+            <label>Rating</label><div class="stars" id="log-stars"></div>
+            <label>Notes</label><textarea id="log-summary" rows="3"></textarea>
+            <button class="btn-main" style="background:var(--success); color:white;" onclick="saveQuickSession()">Save Session</button>
+        </div>
     </div>
+
+    <div id="page-hist" class="page"><div id="history-list"></div></div>
 </div>
 
 <script>
+    // Incremented version to add plan description
     const db = new Dexie("ThorneCoreDB");
-    db.version(2).stores({ 
-        plans: '++id, name', 
-        objectives: '++id, planId, title, rating', 
+    db.version(5).stores({ 
+        plans: '++id, name, targetDate, description', 
+        objectives: '++id, planId, title, rating, description, comments, targetDate', 
         logs: '++id, date, planId, objId' 
     });
 
-    let currentRating = 0, sessionMedia = [], sessionAudios = [], recorder, chunks = [];
+    let openPlanId = null;
+    let openObjIds = new Set();
+    let currentLogRate = 0, recorder, chunks = [];
 
     async function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -126,98 +118,172 @@
         if(id === 'dash') renderDash();
         if(id === 'plan') renderPlans();
         if(id === 'hist') renderHistory();
+        if(id === 'log') { updatePlanDropdown(); renderLogStars(); document.getElementById('log-date').valueAsDate = new Date(); }
     }
 
-    async function clearDataOnly() {
-        if(confirm("Clear history and ratings? Plans will be saved.")) {
-            await db.logs.clear();
-            await db.objectives.toCollection().modify({ rating: 0 });
-            renderDash();
+    function togglePlan(id, pId = null) {
+        const e = document.getElementById(id);
+        const isOpening = e.style.display !== 'block';
+        e.style.display = isOpening ? 'block' : 'none';
+        if(pId) openPlanId = isOpening ? pId : null;
+    }
+
+    function toggleObj(id, oId) {
+        const e = document.getElementById(id);
+        const isOpening = e.style.display !== 'block';
+        e.style.display = isOpening ? 'block' : 'none';
+        if(isOpening) openObjIds.add(oId); else openObjIds.delete(oId);
+    }
+
+    async function renderPlans() {
+        const plans = await db.plans.toArray();
+        const container = document.getElementById('plans-container');
+        container.innerHTML = '';
+
+        for(let p of plans) {
+            const objs = await db.objectives.where('planId').equals(p.id).toArray();
+            const avg = objs.length ? Math.round(objs.reduce((a, b) => a + (b.rating || 0), 0) / objs.length) : 0;
+            
+            const planDiv = document.createElement('div');
+            planDiv.className = 'card';
+            
+            let objsHtml = '';
+            for(let o of objs) {
+                objsHtml += `
+                <div class="obj-card">
+                    <div class="obj-summary" onclick="toggleObj('oc-${o.id}', ${o.id})">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:bold;">${o.title}</span>
+                            ${o.targetDate ? `<span class="date-badge">Target: ${o.targetDate}</span>` : ''}
+                        </div>
+                        <div class="stars" onclick="event.stopPropagation()">${renderStarsStatic(o.rating, o.id)}</div>
+                    </div>
+                    <div id="oc-${o.id}" class="obj-content" style="display: ${openObjIds.has(o.id) ? 'block' : 'none'}">
+                        <label>Objective Title</label>
+                        <input type="text" value="${o.title}" onchange="updateObj(${o.id}, 'title', this.value)">
+                        
+                        <label>Target Completion Date</label>
+                        <input type="date" value="${o.targetDate || ''}" onchange="updateObj(${o.id}, 'targetDate', this.value); renderPlans();">
+
+                        <label>Description</label>
+                        <textarea rows="3" onchange="updateObj(${o.id}, 'description', this.value)">${o.description || ''}</textarea>
+                        
+                        <label>Trainer Comments</label>
+                        <textarea rows="2" onchange="updateObj(${o.id}, 'comments', this.value)">${o.comments || ''}</textarea>
+                        
+                        <label>Voice Note</label>
+                        <button class="btn-rec" onclick="toggleVoiceObj(${o.id})" id="rec-btn-${o.id}">🎤 Record</button>
+                        <div id="audio-prev-${o.id}">${o.audio ? `<audio src="${URL.createObjectURL(o.audio)}" controls style="width:100%; margin-top:5px;"></audio>` : ''}</div>
+                        
+                        <button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:15px; width:100%;" onclick="delObj(${o.id})">Delete Objective</button>
+                    </div>
+                </div>`;
+            }
+
+            planDiv.innerHTML = `
+                <div class="plan-summary" onclick="togglePlan('pc-${p.id}', ${p.id})">
+                    <div style="display:flex; flex-direction:column;">
+                        <span>${p.name.toUpperCase()}</span>
+                        <span class="plan-stars">${'★'.repeat(avg)}${'☆'.repeat(5-avg)}</span>
+                        ${p.targetDate ? `<span style="font-size:0.6rem; color:white; opacity:0.8;">Deadline: ${p.targetDate}</span>` : ''}
+                    </div>
+                    <span>OBJ: ${objs.length} ▾</span>
+                </div>
+                <div id="pc-${p.id}" class="plan-content" style="display: ${openPlanId === p.id ? 'block' : 'none'}">
+                    <div style="padding:15px; background:#f9f9f9; border-bottom:1px solid #eee;">
+                         <label>Master Plan Target Date</label>
+                         <input type="date" value="${p.targetDate || ''}" onchange="updatePlanData(${p.id}, 'targetDate', this.value); renderPlans();">
+                         
+                         <label>Plan Overview / Description</label>
+                         <textarea rows="3" placeholder="Describe the focus or overall goal of this plan..." onchange="updatePlanData(${p.id}, 'description', this.value)">${p.description || ''}</textarea>
+                    </div>
+                    ${objsHtml}
+                    <div style="padding:15px; border-top:1px solid #eee;">
+                        <input type="text" id="no-${p.id}" placeholder="New Objective Name">
+                        <button class="btn-main" onclick="addObj(${p.id})">+ Add Objective</button>
+                        <button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:10px; width:100%;" onclick="delPlan(${p.id})">Delete Entire Plan</button>
+                    </div>
+                </div>`;
+            container.appendChild(planDiv);
         }
     }
 
-    // --- DASHBOARD RENDER ---
-    async function renderDash() {
-        const logs = await db.logs.toArray();
-        const plans = await db.plans.toArray();
-        const objs = await db.objectives.toArray();
-        document.getElementById('stat-total-logs').innerText = logs.length;
-        document.getElementById('stat-total-plans').innerText = plans.length;
-        
-        const mastery = objs.length > 0 ? objs.filter(o => (o.rating || 0) >= 4).length : 0;
-        const masteryPercent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
-        document.getElementById('dash-mastery-list').innerHTML = `
-            <div style="font-size:0.8rem;">Mastered: <b>${mastery} / ${objs.length}</b></div>
-            <div style="height:8px; background:#ddd; border-radius:4px; margin-top:5px; overflow:hidden;">
-                <div style="width:${masteryPercent}%; height:100%; background:var(--gold);"></div>
-            </div>`;
+    function renderStarsStatic(rating, objId) {
+        return [1,2,3,4,5].map(v => `<span onclick="setObjRate(event, ${objId}, ${v})" class="${v <= (rating||0) ? 'filled' : ''}">${v <= (rating||0) ? '★' : '☆'}</span>`).join('');
     }
 
-    // --- MEDIA HANDLING ---
-    function handleMediaUpload(input) {
-        const file = input.files[0];
-        if(!file) return;
-        sessionMedia.push(file); 
-        renderMediaPreviews();
+    async function setObjRate(e, id, val) {
+        e.stopPropagation(); 
+        const obj = await db.objectives.get(id);
+        await db.objectives.update(id, { rating: obj.rating === val ? 0 : val });
+        renderPlans();
     }
 
-    function renderMediaPreviews() {
-        const container = document.getElementById('session-media-prev');
-        container.innerHTML = '';
-        sessionMedia.forEach(file => {
-            const url = URL.createObjectURL(file);
-            container.innerHTML += file.type.startsWith('video') 
-                ? `<video src="${url}" muted playsinline></video>` 
-                : `<img src="${url}">`;
-        });
+    async function updateObj(id, field, val) {
+        let update = {}; update[field] = val;
+        await db.objectives.update(id, update);
     }
 
-    async function toggleVoice() {
-        const btn = document.getElementById('rec-btn');
+    async function updatePlanData(id, field, val) {
+        let update = {}; update[field] = val;
+        await db.plans.update(id, update);
+    }
+
+    async function toggleVoiceObj(id) {
+        const btn = document.getElementById(`rec-btn-${id}`);
         if (!recorder) {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recorder = new MediaRecorder(stream);
             chunks = [];
             recorder.ondataavailable = e => chunks.push(e.data);
-            recorder.onstop = () => {
-                sessionAudios.push(new Blob(chunks, { type: 'audio/ogg; codecs=opus' }));
-                renderAudioPreviews();
+            recorder.onstop = async () => {
+                const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
+                await db.objectives.update(id, { audio: blob });
+                renderPlans();
             };
-            recorder.start();
-            btn.innerText = "🛑 Stop Recording";
+            recorder.start(); btn.innerText = "🛑 Stop";
         } else {
-            recorder.stop(); recorder = null;
-            btn.innerText = "🎤 Start Recording";
+            recorder.stop(); recorder = null; btn.innerText = "🎤 Record";
         }
     }
 
-    function renderAudioPreviews() {
-        const container = document.getElementById('session-audio-prev');
-        container.innerHTML = sessionAudios.map(blob => `<audio src="${URL.createObjectURL(blob)}" controls style="width:100%; margin-top:5px;"></audio>`).join('');
+    async function addPlan() {
+        const n = document.getElementById('new-plan-name').value;
+        if(n) { await db.plans.add({name: n, targetDate: '', description: ''}); document.getElementById('new-plan-name').value=''; renderPlans(); }
     }
 
-    // --- SESSION FLOW ---
-    function startNewSession() {
-        document.getElementById('session-init-view').style.display='none';
-        document.getElementById('session-active-card').style.display='block';
-        document.getElementById('log-date').valueAsDate = new Date();
-        sessionMedia = []; sessionAudios = []; currentRating = 0;
-        renderStars(); updatePlanDropdown();
+    async function addObj(pId) {
+        const n = document.getElementById(`no-${pId}`).value;
+        if(n) { await db.objectives.add({planId: pId, title: n, rating: 0, targetDate: '', description: '', comments: ''}); renderPlans(); }
     }
 
-    async function saveFullSession() {
+    async function delObj(id) { if(confirm("Delete objective?")) { await db.objectives.delete(id); renderPlans(); } }
+    async function delPlan(id) { if(confirm("Delete entire plan?")) { await db.plans.delete(id); await db.objectives.where('planId').equals(id).delete(); renderPlans(); } }
+
+    async function renderDash() {
+        const logs = await db.logs.toArray();
+        const plans = await db.plans.toArray();
+        const objs = await db.objectives.toArray();
+        const mastery = objs.filter(o => (o.rating || 0) >= 4).length;
+        const percent = objs.length > 0 ? (mastery/objs.length)*100 : 0;
+        document.getElementById('stat-total-logs').innerText = logs.length;
+        document.getElementById('stat-total-plans').innerText = plans.length;
+        document.getElementById('dash-mastery-list').innerHTML = `
+            <label>Mastery Overview</label>
+            <div style="font-size:0.8rem; margin-bottom:5px;">Mastered: <b>${mastery}/${objs.length}</b></div>
+            <div style="height:10px; background:#ddd; border-radius:5px; overflow:hidden;"><div style="width:${percent}%; height:100%; background:var(--gold);"></div></div>`;
+    }
+
+    async function saveQuickSession() {
         const pId = parseInt(document.getElementById('log-plan-link').value);
         const oId = parseInt(document.getElementById('log-obj-link').value);
-        if(!pId || !oId) return alert("Pick Plan/Objective");
+        if(!pId || !oId) return alert("Select Plan & Objective");
         await db.logs.add({
             date: document.getElementById('log-date').value,
-            planId: pId, objId: oId, rating: currentRating,
-            summary: document.getElementById('log-summary').value,
-            media: sessionMedia, audios: sessionAudios
+            planId: pId, objId: oId, rating: currentLogRate,
+            summary: document.getElementById('log-summary').value
         });
         showPage('hist');
-        document.getElementById('session-init-view').style.display='block';
-        document.getElementById('session-active-card').style.display='none';
     }
 
     async function renderHistory() {
@@ -225,35 +291,16 @@
         const container = document.getElementById('history-list'); container.innerHTML = '';
         for(let l of logs) {
             const plan = await db.plans.get(l.planId); const obj = await db.objectives.get(l.objId);
-            const div = document.createElement('div'); div.className = 'card'; div.style.padding = '0';
-            const mediaHtml = (l.media || []).map(file => {
-                const url = URL.createObjectURL(file);
-                return file.type.startsWith('video') ? `<video src="${url}" controls playsinline style="width:100%; margin-top:10px;"></video>` : `<img src="${url}" style="width:100px; height:100px; margin:5px; object-fit:cover;">`;
-            }).join('');
-            const audioHtml = (l.audios || []).map(blob => `<audio src="${URL.createObjectURL(blob)}" controls style="width:100%; margin-top:10px;"></audio>`).join('');
-            div.innerHTML = `<div class="hist-summary" onclick="toggle('h-${l.id}')"><span><b>${l.date}</b><br>${plan?.name} > ${obj?.title}</span><span style="color:var(--gold);">${'★'.repeat(l.rating)}</span></div>
-                <div id="h-${l.id}" class="hist-details"><p>${l.summary}</p><div style="display:flex; flex-wrap:wrap;">${mediaHtml}</div>${audioHtml}<button style="color:red; border:none; background:none; margin-top:10px;" onclick="delLog(${l.id})">Delete</button></div>`;
-            container.appendChild(div);
+            container.innerHTML += `<div class="card" style="padding:15px; font-size:0.85rem;">
+                <b>${l.date}</b><br>${plan?.name} > ${obj?.title} <span style="color:var(--gold); float:right;">${'★'.repeat(l.rating)}</span>
+                <p style="margin:10px 0 0; color:#555;">${l.summary}</p>
+            </div>`;
         }
     }
 
-    // --- HELPERS ---
-    function renderStars() { document.getElementById('session-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="setRate(${v})" class="${v <= currentRating ? 'filled' : ''}">${v <= currentRating ? '★' : '☆'}</span>`).join(''); }
-    function setRate(v) { currentRating = (currentRating === v) ? 0 : v; renderStars(); }
-    function toggle(id) { const e = document.getElementById(id); e.style.display = e.style.display==='block' ? 'none' : 'block'; }
-    async function delLog(id) { if(confirm("Delete?")) { await db.logs.delete(id); renderHistory(); } }
-    async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option value="">Select Plan</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
+    function renderLogStars() { document.getElementById('log-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="currentLogRate=${v};renderLogStars()" class="${v <= currentLogRate ? 'filled' : ''}">${v <= currentLogRate ? '★' : '☆'}</span>`).join(''); }
+    async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option>Select Plan</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
     async function updateObjectiveDropdown() { const pId = parseInt(document.getElementById('log-plan-link').value); const o = await db.objectives.where('planId').equals(pId).toArray(); document.getElementById('log-obj-link').innerHTML = o.map(x => `<option value="${x.id}">${x.title}</option>`).join(''); }
-    async function addPlan() { const n = document.getElementById('new-plan-name').value; if(n) { await db.plans.add({name: n}); renderPlans(); } }
-    async function renderPlans() {
-        const plans = await db.plans.toArray();
-        const container = document.getElementById('plans-container'); container.innerHTML = '';
-        for(let p of plans) {
-            const objs = await db.objectives.where('planId').equals(p.id).toArray();
-            container.innerHTML += `<div class="card"><b>${p.name}</b><hr>${objs.map(o => `<div>${o.title}</div>`).join('')}<input id="no-${p.id}"><button class="btn-main" onclick="addObj(${p.id})">Add Objective</button></div>`;
-        }
-    }
-    async function addObj(pId) { const t = document.getElementById(`no-${pId}`).value; await db.objectives.add({planId: pId, title: t, rating: 0}); renderPlans(); }
 
     renderDash();
 </script>
