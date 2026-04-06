@@ -151,7 +151,7 @@
 
 <script>
     const db = new Dexie("ThorneCoreDB");
-    db.version(6).stores({ 
+    db.version(7).stores({ 
         plans: '++id, name, targetDate, description', 
         objectives: '++id, planId, title, rating, description, comments, targetDate', 
         logs: '++id, date, planId, objId, rating, summary, audio, location, distraction' 
