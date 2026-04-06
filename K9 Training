@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THORNE PRO - Master Suite</title>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <style>
+        :root { --navy: #0D1B2A; --gold: #D4AF37; --bg: #F0F2F5; --white: #FFFFFF; --danger: #8B0000; --success: #2D6A4F; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: var(--navy); }
+        
+        .header { background: var(--navy); padding: 15px; text-align: center; border-bottom: 4px solid var(--gold); }
+        .header h1 { color: var(--gold); margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        nav { display: flex; background: var(--navy); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212,175,55,0.2); }
+        nav button { flex: 1; padding: 12px 5px; border: none; background: none; color: #E0E1DD; font-weight: bold; font-size: 0.65rem; border-bottom: 3px solid transparent; text-transform: uppercase; }
+        nav button.active { border-bottom: 3px solid var(--gold); color: var(--gold); }
+
+        .container { max-width: 500px; margin: auto; padding: 15px; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .card { background: var(--white); border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
+        
+        /* DASHBOARD STYLES */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: var(--navy); color: var(--gold); padding: 12px 10px; border-radius: 8px; text-align: center; }
+        .stat-box big { font-size: 1.5rem; font-weight: bold; display: block; }
+        
+        /* UPDATED: STAT BREAKDOWN FOR WHITE OBJECTIVE TEXT */
+        .stat-breakdown { font-size: 0.6rem; margin-top: 8px; text-align: left; opacity: 0.9; border-top: 1px solid rgba(212,175,55,0.3); padding-top: 5px; max-height: 150px; overflow-y: auto; }
+        .plan-vol-header { color: var(--gold); font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; padding: 4px 0; }
+        .obj-vol-row { color: #FFFFFF; display: flex; justify-content: space-between; padding: 2px 0 2px 10px; border-left: 1px solid rgba(255,255,255,0.2); margin-left: 5px; }
+        
+        .progress-container { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; position: relative; flex: 1; margin: 0 10px; }
+        .progress-bar { height: 100%; background: var(--gold); transition: width 0.3s ease; }
+        
+        .dash-row-inline { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+        .dash-label-text { font-size: 0.75rem; font-weight: bold; min-width: 85px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dash-percent-text { font-size: 0.75rem; font-weight: bold; min-width: 35px; text-align: right; color: var(--gold); }
+
+        .dash-section-title { font-size: 0.75rem; font-weight: bold; color: var(--navy); text-transform: uppercase; margin: 20px 0 10px 5px; border-left: 3px solid var(--gold); padding-left: 8px; }
+        .dash-plan-card { margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .dash-plan-summary { background: #fff; padding: 12px; cursor: pointer; }
+        .dash-plan-details { display: none; background: #fcfcfc; padding: 10px 15px 15px; border-top: 1px solid #eee; }
+        
+        .obj-mini-row { margin-top: 8px; }
+        
+        /* OTHER TAB STYLES */
+        .plan-summary { background: var(--navy); color: var(--gold); padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); }
+        .plan-content { display: none; background: #fff; }
+        .obj-card { border: 1px solid #eee; margin: 10px; border-radius: 6px; background: #fdfdfd; }
+        .obj-summary { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .obj-content { padding: 15px; display: none; background: #fff; }
+        .stars { font-size: 1.2rem; color: #ccc; cursor: pointer; display: flex; gap: 3px; }
+        .stars .filled { color: var(--gold); }
+        .plan-stars { font-size: 1.4rem; color: var(--gold); margin-top: 5px; letter-spacing: 4px; line-height: 1; display: block; }
+        label { font-size: 0.65rem; text-transform: uppercase; font-weight: bold; color: #666; display: block; margin-top: 15px; margin-bottom: 5px; }
+        textarea, input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; font-family: inherit; background: white; }
+        input[type=range] { width: 100%; height: 8px; background: #ddd; border-radius: 5px; appearance: none; outline: none; margin: 10px 0; }
+        input[type=range]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; background: var(--navy); border: 2px solid var(--gold); border-radius: 50%; cursor: pointer; }
+        .date-badge { font-size: 0.7rem; color: var(--gold); background: rgba(212,175,55,0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+        .btn-main { width: 100%; background: var(--navy); color: var(--gold); padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-rec { background: var(--danger); color: white; padding: 10px; border-radius: 4px; border: none; width: 100%; font-size: 0.8rem; font-weight: bold; margin-top: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .hist-card-summary { padding: 15px; cursor: pointer; background: var(--white); display: flex; justify-content: space-between; align-items: center; }
+        .hist-card-details { display: none; padding: 0 15px 15px; background: #fafafa; border-top: 1px solid #eee; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="header"><h1>THORNE Master Suite</h1></div>
+
+<nav>
+    <button id="nav-dash" class="active" onclick="showPage('dash')">Dash</button>
+    <button id="nav-log" onclick="showPage('log')">Session</button>
+    <button id="nav-plan" onclick="showPage('plan')">Plans</button>
+    <button id="nav-hist" onclick="showPage('hist')">History</button>
+</nav>
+
+<div class="container">
+    <div id="page-dash" class="page active">
+        <div class="stat-grid">
+            <div class="stat-box">
+                <small>Total Sessions</small>
+                <big id="stat-total-logs">0</big>
+                <div id="volume-deep-breakdown" class="stat-breakdown"></div>
+            </div>
+            <div class="stat-box">
+                <small>Active Plans</small>
+                <big id="stat-total-plans">0</big>
+            </div>
+        </div>
+        
+        <div class="card" style="padding:15px;">
+            <div class="dash-row-inline">
+                <span class="dash-label-text">Global Mastery</span>
+                <div class="progress-container"><div id="global-progress-bar" class="progress-bar" style="width: 0%;"></div></div>
+                <span id="global-percent" class="dash-percent-text">0%</span>
+            </div>
+            <div style="font-size:0.6rem; color:#888; text-align:center; margin-top:5px;">
+                Mastered: <b id="global-count">0/0</b> Objectives
+            </div>
+        </div>
+
+        <div class="dash-section-title">Plan Mastery Breakdowns</div>
+        <div id="plan-mastery-list"></div>
+        <button class="btn-main" onclick="showPage('log')">Start Training Now</button>
+    </div>
+
+    <div id="page-plan" class="page">
+        <div id="plans-container"></div>
+        <div class="card">
+            <div class="plan-summary" onclick="togglePlan('new-plan-form-container')">
+                <span>+ CREATE NEW PLAN</span>
+                <span>▾</span>
+            </div>
+            <div id="new-plan-form-container" class="plan-content" style="padding:15px;">
+                <label>Plan Name</label>
+                <input type="text" id="new-plan-name" placeholder="e.g. Schutzhund Tracking">
+                <button class="btn-main" onclick="addPlan()">Create Plan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-log" class="page">
+        <div class="card" style="padding:15px;">
+            <label>Date</label><input type="date" id="log-date">
+            <label>Plan</label><select id="log-plan-link" onchange="updateObjectiveDropdown()"></select>
+            <label>Objective</label><select id="log-obj-link"></select>
+            <label>Location</label>
+            <select id="log-location" onchange="toggleOtherLocation(this.value)">
+                <option value="Home">Home</option>
+                <option value="Club">Club</option>
+                <option value="Other">Other...</option>
+            </select>
+            <div id="other-location-container" style="display:none; margin-top:8px;"><input type="text" id="log-location-other" placeholder="Enter location name"></div>
+            <div style="margin-top:15px;">
+                <label style="display:flex; justify-content:space-between;">Distraction Level <span id="distraction-label" style="color:var(--success);">Low (1)</span></label>
+                <input type="range" id="log-distraction" min="1" max="10" value="1" oninput="updateDistractionLabel(this.value)">
+            </div>
+            <label>Rating</label><div class="stars" id="log-stars"></div>
+            <label>Notes</label><textarea id="log-summary" rows="3" placeholder="How did Thorne perform?"></textarea>
+            <label>Session Voice Note</label><button class="btn-rec" id="session-rec-btn" onclick="toggleSessionVoice()">🎤 Record Voice Note</button>
+            <div id="session-audio-preview" style="margin-top:10px;"></div>
+            <button class="btn-main" style="background:var(--success); color:white; margin-top:20px;" onclick="saveQuickSession()">Save Session</button>
+        </div>
+    </div>
+
+    <div id="page-hist" class="page"><div id="history-list"></div></div>
+</div>
+
+<script>
+    const db = new Dexie("ThorneCoreDB");
+    db.version(6).stores({ 
+        plans: '++id, name, targetDate, description', 
+        objectives: '++id, planId, title, rating, description, comments, targetDate', 
+        logs: '++id, date, planId, objId, rating, summary, audio, location, distraction' 
+    });
+
+    let openPlanId = null;
+    let openObjIds = new Set();
+    let dashOpenPlanIds = new Set();
+    let volOpenPlanIds = new Set();
+    let historyOpenIds = new Set();
+    let currentLogRate = 0;
+    let recorder, chunks = [];
+    let sessionAudioBlob = null;
+
+    async function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + id).classList.add('active');
+        document.getElementById('nav-' + id).classList.add('active');
+        if(id === 'dash') renderDash();
+        if(id === 'plan') renderPlans();
+        if(id === 'hist') renderHistory();
+        if(id === 'log') { updatePlanDropdown(); renderLogStars(); document.getElementById('log-date').valueAsDate = new Date(); resetSessionLog(); }
+    }
+
+    function toggleVolPlan(pId) {
+        const el = document.getElementById(`vol-obj-cont-${pId}`);
+        const isOpening = el.style.display !== 'block';
+        el.style.display = isOpening ? 'block' : 'none';
+        if(isOpening) volOpenPlanIds.add(pId); else volOpenPlanIds.delete(pId);
+    }
+    function toggleDashPlan(pId) {
+        const el = document.getElementById(`dash-plan-det-${pId}`);
+        const isOpening = el.style.display !== 'block';
+        el.style.display = isOpening ? 'block' : 'none';
+        if(isOpening) dashOpenPlanIds.add(pId); else dashOpenPlanIds.delete(pId);
+    }
+
+    async function renderDash() {
+        const logs = await db.logs.toArray();
+        const plans = await db.plans.toArray();
+        const objs = await db.objectives.toArray();
+        
+        document.getElementById('stat-total-logs').innerText = logs.length;
+        document.getElementById('stat-total-plans').innerText = plans.length;
+        
+        const volumeEl = document.getElementById('volume-deep-breakdown');
+        volumeEl.innerHTML = '';
+        for(let p of plans) {
+            const planLogs = logs.filter(l => l.planId === p.id);
+            if(planLogs.length > 0) {
+                const isExpanded = volOpenPlanIds.has(p.id);
+                let planHtml = `<div class="plan-vol-group"><div class="plan-vol-header" onclick="toggleVolPlan(${p.id})"><span>${p.name} ▾</span><span>${planLogs.length}</span></div><div id="vol-obj-cont-${p.id}" style="display: ${isExpanded ? 'block' : 'none'}">`;
+                const pObjs = objs.filter(o => o.planId === p.id);
+                for(let o of pObjs) {
+                    const objLogs = planLogs.filter(l => l.objId === o.id);
+                    if(objLogs.length > 0) planHtml += `<div class="obj-vol-row"><span>${o.title}</span><span>${objLogs.length}</span></div>`;
+                }
+                planHtml += `</div></div>`;
+                volumeEl.innerHTML += planHtml;
+            }
+        }
+
+        const masteredObjs = objs.filter(o => (o.rating || 0) >= 4);
+        const globalPercent = objs.length > 0 ? Math.round((masteredObjs.length / objs.length) * 100) : 0;
+        document.getElementById('global-count').innerText = `${masteredObjs.length}/${objs.length}`;
+        document.getElementById('global-percent').innerText = `${globalPercent}%`;
+        document.getElementById('global-progress-bar').style.width = `${globalPercent}%`;
+
+        const planList = document.getElementById('plan-mastery-list');
+        planList.innerHTML = '';
+        for(let p of plans) {
+            const pObjs = objs.filter(o => o.planId === p.id);
+            const pMastered = pObjs.filter(o => (o.rating || 0) >= 4).length;
+            const pPercent = pObjs.length > 0 ? Math.round((pMastered / pObjs.length) * 100) : 0;
+            const isOpen = dashOpenPlanIds.has(p.id);
+            
+            let objBreakdownHtml = '';
+            for(let o of pObjs) {
+                const oRating = o.rating || 0;
+                const oPercent = Math.round((oRating / 5) * 100);
+                objBreakdownHtml += `
+                    <div class="obj-mini-row">
+                        <div class="dash-row-inline">
+                            <span class="dash-label-text" style="font-weight:normal; font-size:0.7rem;">${o.title}</span>
+                            <div class="progress-container" style="height:4px; margin:0 5px;"><div class="progress-bar" style="width: ${oPercent}%; background:${oRating >= 4 ? 'var(--success)' : 'var(--gold)'};"></div></div>
+                            <span class="dash-percent-text" style="font-size:0.65rem; min-width:25px;">${oRating}/5</span>
+                        </div>
+                    </div>`;
+            }
+
+            planList.innerHTML += `
+                <div class="dash-plan-card">
+                    <div class="dash-plan-summary" onclick="toggleDashPlan(${p.id})">
+                        <div class="dash-row-inline">
+                            <span class="dash-label-text">${p.name}</span>
+                            <div class="progress-container"><div class="progress-bar" style="width: ${pPercent}%;"></div></div>
+                            <span class="dash-percent-text">${pPercent}%</span>
+                        </div>
+                        <div style="font-size:0.55rem; color:#999; text-align:center; margin-top:2px;">${pMastered}/${pObjs.length} Obj Mastered</div>
+                    </div>
+                    <div id="dash-plan-det-${p.id}" class="dash-plan-details" style="display: ${isOpen ? 'block' : 'none'}">
+                        ${objBreakdownHtml || '<div style=\"font-size:0.7rem; color:#999;\">No objectives added.</div>'}
+                    </div>
+                </div>`;
+        }
+    }
+
+    function togglePlan(id, pId = null) { const e = document.getElementById(id); e.style.display = e.style.display !== 'block' ? 'block' : 'none'; if(pId) openPlanId = e.style.display === 'block' ? pId : null; }
+    function toggleObj(id, oId) { const e = document.getElementById(id); e.style.display = e.style.display !== 'block' ? 'block' : 'none'; if(e.style.display === 'block') openObjIds.add(oId); else openObjIds.delete(oId); }
+    async function renderPlans() {
+        const plans = await db.plans.toArray();
+        const container = document.getElementById('plans-container'); container.innerHTML = '';
+        for(let p of plans) {
+            const objs = await db.objectives.where('planId').equals(p.id).toArray();
+            const avg = objs.length ? Math.round(objs.reduce((a, b) => a + (b.rating || 0), 0) / objs.length) : 0;
+            const planDiv = document.createElement('div'); planDiv.className = 'card';
+            let objsHtml = '';
+            for(let o of objs) {
+                objsHtml += `<div class="obj-card"><div class="obj-summary" onclick="toggleObj('oc-${o.id}', ${o.id})"><div style="display:flex; flex-direction:column;"><span style="font-weight:bold;">${o.title}</span>${o.targetDate ? `<span class=\"date-badge\">Target: ${o.targetDate}</span>` : ''}</div><div class="stars" onclick="event.stopPropagation()">${renderStarsStatic(o.rating, o.id)}</div></div><div id="oc-${o.id}" class="obj-content" style="display: ${openObjIds.has(o.id) ? 'block' : 'none'}"><label>Objective Title</label><input type="text" value="${o.title}" onchange="updateObj(${o.id}, 'title', this.value)"><label>Target Date</label><input type="date" value="${o.targetDate || ''}" onchange="updateObj(${o.id}, 'targetDate', this.value); renderPlans();"><label>Description</label><textarea rows="3" onchange="updateObj(${o.id}, 'description', this.value)">${o.description || ''}</textarea><label>Trainer Comments</label><textarea rows="2" onchange="updateObj(${o.id}, 'comments', this.value)">${o.comments || ''}</textarea><label>Voice Note</label><button class="btn-rec" onclick="toggleVoiceObj(${o.id})" id="rec-btn-${o.id}">🎤 Record</button><div id="audio-prev-${o.id}">${o.audio ? `<audio src="${URL.createObjectURL(o.audio)}" controls style="width:100%; margin-top:5px;"></audio>` : ''}</div><button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:15px; width:100%;" onclick="delObj(${o.id})">Delete Objective</button></div></div>`;
+            }
+            planDiv.innerHTML = `<div class="plan-summary" onclick="togglePlan('pc-${p.id}', ${p.id})"><div style="display:flex; flex-direction:column;"><span>${p.name.toUpperCase()}</span><span class="plan-stars">${'★'.repeat(avg)}${'☆'.repeat(5-avg)}</span></div><span>OBJ: ${objs.length} ▾</span></div><div id="pc-${p.id}" class="plan-content" style="display: ${openPlanId === p.id ? 'block' : 'none'}"><div style="padding:15px; background:#f9f9f9; border-bottom:1px solid #eee;"><label>Target Date</label><input type="date" value="${p.targetDate || ''}" onchange="updatePlanData(${p.id}, 'targetDate', this.value); renderPlans();"><label>Plan Overview</label><textarea rows="3" onchange="updatePlanData(${p.id}, 'description', this.value)">${p.description || ''}</textarea></div>${objsHtml}<div style="padding:15px; border-top:1px solid #eee;"><input type="text" id="no-${p.id}" placeholder="New Objective Name"><button class="btn-main" onclick="addObj(${p.id})">+ Add Objective</button><button style="color:red; border:none; background:none; font-size:0.7rem; margin-top:10px; width:100%;" onclick="delPlan(${p.id})">Delete Entire Plan</button></div></div>`;
+            container.appendChild(planDiv);
+        }
+    }
+    function renderStarsStatic(rating, objId) { return [1,2,3,4,5].map(v => `<span onclick="setObjRate(event, ${objId}, ${v})" class="${v <= (rating||0) ? 'filled' : ''}">${v <= (rating||0) ? '★' : '☆'}</span>`).join(''); }
+    async function setObjRate(e, id, val) { e.stopPropagation(); const obj = await db.objectives.get(id); await db.objectives.update(id, { rating: obj.rating === val ? 0 : val }); renderPlans(); }
+    async function updateObj(id, field, val) { let update = {}; update[field] = val; await db.objectives.update(id, update); }
+    async function updatePlanData(id, field, val) { let update = {}; update[field] = val; await db.plans.update(id, update); }
+    async function toggleVoiceObj(id) {
+        const btn = document.getElementById(`rec-btn-${id}`);
+        if (!recorder) {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); recorder = new MediaRecorder(stream); chunks = []; recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = async () => { const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' }); await db.objectives.update(id, { audio: blob }); renderPlans(); };
+            recorder.start(); btn.innerText = "🛑 Stop";
+        } else { recorder.stop(); recorder = null; btn.innerText = "🎤 Record"; }
+    }
+    async function addPlan() { const n = document.getElementById('new-plan-name').value; if(n) { await db.plans.add({name: n, targetDate: '', description: ''}); document.getElementById('new-plan-name').value=''; renderPlans(); } }
+    async function addObj(pId) { const n = document.getElementById(`no-${pId}`).value; if(n) { await db.objectives.add({planId: pId, title: n, rating: 0, targetDate: '', description: '', comments: ''}); renderPlans(); } }
+    async function delObj(id) { if(confirm("Delete Objective?")) { await db.objectives.delete(id); renderPlans(); } }
+    async function delPlan(id) { if(confirm("Delete entire Plan?")) { await db.plans.delete(id); await db.objectives.where('planId').equals(id).delete(); renderPlans(); } }
+
+    function toggleHistoryCard(id) { const el = document.getElementById(`hist-det-${id}`); const isOpening = el.style.display !== 'block'; el.style.display = isOpening ? 'block' : 'none'; if(isOpening) historyOpenIds.add(id); else historyOpenIds.delete(id); }
+    async function renderHistory() {
+        const logs = await db.logs.toArray(); const plans = await db.plans.toArray(); const objectives = await db.objectives.toArray();
+        const container = document.getElementById('history-list'); container.innerHTML = '';
+        const hydratedLogs = logs.map(l => {
+            const p = plans.find(plan => plan.id === l.planId); const o = objectives.find(obj => obj.id === l.objId);
+            return { ...l, planName: p?.name || 'Deleted Plan', objName: o?.title || 'Deleted Objective' };
+        });
+        hydratedLogs.sort((a, b) => {
+            if (a.planName < b.planName) return -1; if (a.planName > b.planName) return 1;
+            if (a.objName < b.objName) return -1; if (a.objName > b.objName) return 1;
+            return new Date(b.date) - new Date(a.date);
+        });
+        for(let l of hydratedLogs) {
+            const audioUrl = l.audio ? URL.createObjectURL(l.audio) : null;
+            const isOpen = historyOpenIds.has(l.id);
+            container.innerHTML += `<div class="card" style="margin-bottom:10px;"><div class="hist-card-summary" onclick="toggleHistoryCard(${l.id})"><div style="flex:1;"><div style="font-weight:bold; font-size:0.9rem; color:var(--navy);">${l.planName} > ${l.objName}</div><div style="font-size:0.75rem; color:#666;">${l.date} • ${l.location || 'N/A'}</div></div><div style="text-align:right; margin-left:10px;"><span style="color:var(--gold); font-size:0.9rem;">${'★'.repeat(l.rating)}${'☆'.repeat(5-l.rating)}</span><div style="font-size:0.6rem; color:#aaa; margin-top:2px;">▾</div></div></div><div id="hist-det-${l.id}" class="hist-card-details" style="display: ${isOpen ? 'block' : 'none'}"><div style="font-size:0.7rem; color:#888; margin-bottom:8px; padding-top:10px; border-top:1px solid #f0f0f0;">Distraction Level: ${l.distraction || 1}/10</div><p style="margin:5px 0 10px; color:#444; line-height:1.4;">${l.summary || 'No notes provided.'}</p>${audioUrl ? `<audio src="${audioUrl}" controls style="width:100%; height:35px;"></audio>` : ''}<div style="text-align:right; margin-top:10px;"><button onclick="deleteLog(${l.id})" style="border:none; background:none; color:var(--danger); font-size:0.65rem; font-weight:bold;">DELETE ENTRY</button></div></div></div>`;
+        }
+    }
+    async function deleteLog(id) { if(confirm("Delete entry?")) { await db.logs.delete(id); renderHistory(); } }
+    function renderLogStars() { document.getElementById('log-stars').innerHTML = [1,2,3,4,5].map(v => `<span onclick="currentLogRate=${v};renderLogStars()" class="${v <= currentLogRate ? 'filled' : ''}">${v <= currentLogRate ? '★' : '☆'}</span>`).join(''); }
+    async function updatePlanDropdown() { const p = await db.plans.toArray(); document.getElementById('log-plan-link').innerHTML = '<option value="">Select Plan</option>' + p.map(x => `<option value="${x.id}">${x.name}</option>`).join(''); }
+    async function updateObjectiveDropdown() { const pId = parseInt(document.getElementById('log-plan-link').value); const o = await db.objectives.where('planId').equals(pId).toArray(); document.getElementById('log-obj-link').innerHTML = o.map(x => `<option value="${x.id}">${x.title}</option>`).join(''); }
+    function toggleOtherLocation(val) { document.getElementById('other-location-container').style.display = (val === 'Other') ? 'block' : 'none'; }
+    function updateDistractionLabel(val) { const label = document.getElementById('distraction-label'); let text = "Low"; let color = "var(--success)"; if(val > 3) { text = "Moderate"; color = "#C49102"; } if(val > 7) { text = "High"; color = "var(--danger)"; } label.innerText = `${text} (${val})`; label.style.color = color; }
+    function resetSessionLog() { sessionAudioBlob = null; document.getElementById('session-audio-preview').innerHTML = ''; document.getElementById('session-rec-btn').innerText = "🎤 Record Voice Note"; document.getElementById('log-summary').value = ''; document.getElementById('log-location').value = 'Home'; document.getElementById('other-location-container').style.display = 'none'; document.getElementById('log-distraction').value = 1; updateDistractionLabel(1); }
+    async function toggleSessionVoice() { const btn = document.getElementById('session-rec-btn'); if (!recorder) { try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); recorder = new MediaRecorder(stream); chunks = []; recorder.ondataavailable = e => chunks.push(e.data); recorder.onstop = () => { sessionAudioBlob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' }); document.getElementById('session-audio-preview').innerHTML = `<audio src="${URL.createObjectURL(sessionAudioBlob)}" controls style="width:100%;"></audio>`; }; recorder.start(); btn.innerText = "🛑 Stop"; } catch (err) { alert("Mic denied."); } } else { recorder.stop(); recorder = null; btn.innerText = "🎤 Record"; } }
+    async function saveQuickSession() { const pId = parseInt(document.getElementById('log-plan-link').value); const oId = parseInt(document.getElementById('log-obj-link').value); if(!pId || !oId) return alert("Select Plan & Objective"); let loc = document.getElementById('log-location').value; if(loc === 'Other') loc = document.getElementById('log-location-other').value || 'Other'; await db.logs.add({ date: document.getElementById('log-date').value, planId: pId, objId: oId, rating: currentLogRate, summary: document.getElementById('log-summary').value, audio: sessionAudioBlob, location: loc, distraction: parseInt(document.getElementById('log-distraction').value) }); showPage('hist'); }
+
+    renderDash();
+</script>
+</body>
+</html>
